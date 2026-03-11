@@ -105,6 +105,14 @@ export function validatePhoneChars(value) {
     );
   }
 
+  /* 桁数チェック（AB-J変換済み等の想定） */
+  if (value.endsWith('#')) {
+    const digits = value.replace(/[^0-9]/g, '');
+    if (digits.length < 10 || digits.length > 11) {
+      return createResult(SEVERITY.WARNING, `桁数が異常です (${digits.length}桁)`);
+    }
+  }
+
   return null;
 }
 
@@ -196,10 +204,38 @@ export function validateAll(data, spec, gaijiChars = new Set()) {
   let errorCount = 0;
   let warningCount = 0;
 
-  const results = data.map(row => {
+  const memoryNos = new Map(); // value -> Array of indices
+
+  const results = data.map((row, index) => {
     const rowResult = validateRow(row, spec, gaijiChars);
 
-    /* カウント集計 */
+    /* メモリ番号の収集 */
+    const memNo = row.memoryNo;
+    if (memNo !== undefined) {
+      if (!memNo || memNo.trim() === '') {
+        if (!rowResult.memoryNo) rowResult.memoryNo = [];
+        rowResult.memoryNo.push(createResult(SEVERITY.ERROR, 'メモリ番号を入力してください'));
+      } else {
+        if (!memoryNos.has(memNo)) memoryNos.set(memNo, []);
+        memoryNos.get(memNo).push(index);
+      }
+    }
+
+    return rowResult;
+  });
+
+  /* メモリ番号の重複チェックを反映 */
+  memoryNos.forEach((indices, val) => {
+    if (indices.length > 1) {
+      indices.forEach(idx => {
+        if (!results[idx].memoryNo) results[idx].memoryNo = [];
+        results[idx].memoryNo.push(createResult(SEVERITY.ERROR, `メモリ番号が重複しています: ${val}`));
+      });
+    }
+  });
+
+  /* カウント集計 */
+  results.forEach(rowResult => {
     Object.values(rowResult).forEach(fieldResults => {
       if (Array.isArray(fieldResults)) {
         fieldResults.forEach(r => {
@@ -208,8 +244,6 @@ export function validateAll(data, spec, gaijiChars = new Set()) {
         });
       }
     });
-
-    return rowResult;
   });
 
   return { results, errorCount, warningCount };

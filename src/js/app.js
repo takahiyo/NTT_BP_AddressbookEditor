@@ -16,8 +16,9 @@ import {
 import { convertBetweenModels } from './services/model-converter.js';
 import { TableEditor } from './ui/table-editor.js';
 import { initToolbar, updateToolbarState } from './ui/toolbar.js';
-import { showToast, formatText } from './ui/toast.js';
-import { confirmDialog, showGaijiEditor } from './ui/modal.js';
+import { confirmDialog, showGaijiEditor, showCityCodeModal } from './ui/modal.js';
+import { autoAssignMemoryNos } from './services/memory-service.js';
+import { processAllPhoneNumbers } from './services/phone-processor.js';
 
 /* ============================================
  * アプリ状態
@@ -123,6 +124,8 @@ function initToolbarUI() {
     onTruncate: handleTruncate,
     onDeleteEmpty: handleDeleteEmpty,
     onGaijiSettings: handleGaijiSettings,
+    onAutoMemory: handleAutoMemory,
+    onPhoneProcess: handlePhoneProcess,
   });
   updateToolbarState(state.toolbarButtons, false);
 }
@@ -294,46 +297,79 @@ function onCellChange(_rowIndex, _fieldKey, _newValue) {
  * 変換・一括処理ハンドラ
  * ============================================ */
 
-/** 半角変換：フリガナ列を半角に */
+/** 半角変換：選択された列を半角に */
 function handleToHalf() {
+  const selectedCols = state.tableEditor.getSelectedColumns();
+  if (selectedCols.length === 0) {
+    showToast('変換対象の列を選択してください（ヘッダーのチェックボックス）', 'info');
+    return;
+  }
+
   const data = state.tableEditor.getData();
   let count = 0;
   const newData = data.map(row => {
-    const oldVal = row.furigana || '';
-    const newVal = toHalfWidth(oldVal);
-    if (oldVal !== newVal) count++;
-    return { ...row, furigana: newVal };
+    const newRow = { ...row };
+    selectedCols.forEach(colKey => {
+      const oldVal = row[colKey] || '';
+      const newVal = toHalfWidth(oldVal);
+      if (oldVal !== newVal) count++;
+      newRow[colKey] = newVal;
+    });
+    return newRow;
   });
+
   state.tableEditor.updateData(newData);
   runValidation();
   showToast(formatText(UI_TEXT.TOAST.CONVERT_COMPLETE, { count }), 'success');
 }
 
-/** 全角変換：名称列を全角に */
+/** 全角変換：選択された列を全角に */
 function handleToFull() {
+  const selectedCols = state.tableEditor.getSelectedColumns();
+  if (selectedCols.length === 0) {
+    showToast('変換対象の列を選択してください（ヘッダーのチェックボックス）', 'info');
+    return;
+  }
+
   const data = state.tableEditor.getData();
   let count = 0;
   const newData = data.map(row => {
-    const oldVal = row.name || '';
-    const newVal = toFullWidth(oldVal);
-    if (oldVal !== newVal) count++;
-    return { ...row, name: newVal };
+    const newRow = { ...row };
+    selectedCols.forEach(colKey => {
+      const oldVal = row[colKey] || '';
+      const newVal = toFullWidth(oldVal);
+      if (oldVal !== newVal) count++;
+      newRow[colKey] = newVal;
+    });
+    return newRow;
   });
+
   state.tableEditor.updateData(newData);
   runValidation();
   showToast(formatText(UI_TEXT.TOAST.CONVERT_COMPLETE, { count }), 'success');
 }
 
-/** 記号削除：フリガナ列から記号を削除 */
+/** 記号削除：選択された列から記号を削除 */
 function handleRemoveSymbols() {
+  const selectedCols = state.tableEditor.getSelectedColumns();
+  if (selectedCols.length === 0) {
+    showToast('変換対象の列を選択してください（ヘッダーのチェックボックス）', 'info');
+    return;
+  }
+
   const data = state.tableEditor.getData();
   let count = 0;
   const newData = data.map(row => {
-    const oldVal = row.furigana || '';
-    const newVal = removeSymbols(oldVal);
-    if (oldVal !== newVal) count++;
-    return { ...row, furigana: newVal };
+    const newRow = { ...row };
+    selectedCols.forEach(colKey => {
+      const oldVal = row[colKey] || '';
+      const newVal = removeSymbols(oldVal);
+      if (oldVal !== newVal) count++;
+      newRow[colKey] = newVal;
+    });
+    return newRow;
   });
+
   state.tableEditor.updateData(newData);
   runValidation();
   showToast(formatText(UI_TEXT.TOAST.CONVERT_COMPLETE, { count }), 'success');
@@ -376,6 +412,42 @@ async function handleDeleteEmpty() {
   runValidation();
   updateStatusBar();
   showToast(formatText(UI_TEXT.TOAST.EMPTY_ROWS_DELETED, { count: result.deletedCount }), 'success');
+}
+
+/** メモリ番号自動採番 */
+function handleAutoMemory() {
+  const data = state.tableEditor.getData();
+  if (!data || data.length === 0) return;
+
+  const result = autoAssignMemoryNos(data, state.inputSpec, state.digitMode);
+  if (result.assignedCount === 0) {
+    showToast('採番が必要な行はありません', 'info');
+    return;
+  }
+
+  state.tableEditor.updateData(result.data);
+  runValidation();
+  showToast(`メモリ番号を ${result.assignedCount} 件 採番しました`, 'success');
+}
+
+/** 電話番号加工（AB-J変換） */
+async function handlePhoneProcess() {
+  const data = state.tableEditor.getData();
+  if (!data || data.length === 0) return;
+
+  const cityCode = await showCityCodeModal();
+  if (cityCode === null) return;
+
+  const result = processAllPhoneNumbers(data, state.inputSpec.phoneNumberSlots, cityCode);
+  
+  state.tableEditor.updateData(result.data);
+  runValidation();
+  
+  if (result.errorCount > 0) {
+    showToast(`加工完了（${result.processedCount}件）。桁数が異常な番号が ${result.errorCount} 件あります`, 'warning');
+  } else {
+    showToast(`加工完了（${result.processedCount}件）`, 'success');
+  }
 }
 
 /* ============================================

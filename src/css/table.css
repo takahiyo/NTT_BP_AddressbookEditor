@@ -67,6 +67,26 @@
   user-select: none;
 }
 
+.data-table th .col-selector {
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.data-table th .col-label {
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.data-table th .col-label:hover {
+  text-decoration: underline;
+  color: var(--color-accent-primary);
+}
+
+.data-table th .sort-icon {
+  font-size: 10px;
+  vertical-align: middle;
+}
+
 /* 行番号列 */
 .data-table th.col-rownum,
 .data-table td.col-rownum {

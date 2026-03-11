@@ -31,6 +31,8 @@ export class TableEditor {
     this._selectedRows = new Set();
     this._tableEl = null;
     this._tbodyEl = null;
+    this._selectedColumns = new Set();
+    this._sortConfig = { key: null, order: 'asc' }; // asc or desc
   }
 
   /**
@@ -85,19 +87,29 @@ export class TableEditor {
    * 行を追加
    * @param {number} [insertAt] - 挿入位置（省略時は末尾）
    */
-  addRow(insertAt) {
-    const newRow = { _rowIndex: this._data.length };
+  addRow() {
+    /* 選択行の後に挿入、何も選択されていなければ末尾 */
+    const selectedIndices = this.getSelectedRowIndices();
+    let insertAt = this._data.length;
+    if (selectedIndices.length > 0) {
+      insertAt = Math.max(...selectedIndices) + 1;
+    }
+
+    const newRow = {};
     this._columns.forEach(col => {
       newRow[col.key] = col.type === 'number' ? '0' : '';
     });
 
-    if (insertAt !== undefined && insertAt >= 0) {
-      this._data.splice(insertAt, 0, newRow);
-    } else {
-      this._data.push(newRow);
-    }
+    this._data.splice(insertAt, 0, newRow);
     this._reindex();
     this._render();
+    
+    /* 追加された行をスクロールで見えるように（簡易実装） */
+    setTimeout(() => {
+      const el = document.getElementById(`cell-${insertAt}-${this._columns[0].key}`);
+      el?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      el?.focus();
+    }, 100);
   }
 
   /**
@@ -132,6 +144,49 @@ export class TableEditor {
   /** 行インデックスを振り直し */
   _reindex() {
     this._data.forEach((row, i) => { row._rowIndex = i; });
+  }
+
+  /**
+   * 選択されているカラムキーを取得
+   * @returns {Array<string>}
+   */
+  getSelectedColumns() {
+    return [...this._selectedColumns];
+  }
+
+  /**
+   * カラムのソートを実行
+   * @param {string} key - カラムキー
+   */
+  _sortData(key) {
+    if (this._sortConfig.key === key) {
+      this._sortConfig.order = this._sortConfig.order === 'asc' ? 'desc' : 'asc';
+    } else {
+      this._sortConfig.key = key;
+      this._sortConfig.order = 'asc';
+    }
+
+    const col = this._columns.find(c => c.key === key);
+    const isNumber = col?.type === 'number';
+
+    this._data.sort((a, b) => {
+      let valA = a[key] || '';
+      let valB = b[key] || '';
+
+      if (isNumber) {
+        valA = parseFloat(valA) || 0;
+        valB = parseFloat(valB) || 0;
+      } else {
+        valA = String(valA).toLowerCase();
+        valB = String(valB).toLowerCase();
+      }
+
+      if (valA < valB) return this._sortConfig.order === 'asc' ? -1 : 1;
+      if (valA > valB) return this._sortConfig.order === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    this._render();
   }
 
   /** テーブル全体を描画 */
@@ -198,7 +253,33 @@ export class TableEditor {
     this._columns.forEach(col => {
       const th = document.createElement('th');
       th.className = col.cssClass || '';
-      th.textContent = col.label;
+      
+      /* 列選択用チェックボックス */
+      const colCheck = document.createElement('input');
+      colCheck.type = 'checkbox';
+      colCheck.className = 'col-selector';
+      colCheck.checked = this._selectedColumns.has(col.key);
+      colCheck.addEventListener('change', (e) => {
+        if (e.target.checked) this._selectedColumns.add(col.key);
+        else this._selectedColumns.delete(col.key);
+      });
+      th.appendChild(colCheck);
+
+      /* カラム名ラベル */
+      const label = document.createElement('span');
+      label.className = 'col-label';
+      label.textContent = col.label;
+      label.addEventListener('click', () => this._sortData(col.key));
+      th.appendChild(label);
+
+      /* ソートアイコン */
+      if (this._sortConfig.key === col.key) {
+        const icon = document.createElement('span');
+        icon.className = 'sort-icon';
+        icon.textContent = this._sortConfig.order === 'asc' ? ' 🔼' : ' 🔽';
+        th.appendChild(icon);
+      }
+
       /* 制約がある場合、ツールチップにバイト制限を表示 */
       const constraint = this._spec?.fieldConstraints?.[col.key];
       if (constraint?.maxBytes) {

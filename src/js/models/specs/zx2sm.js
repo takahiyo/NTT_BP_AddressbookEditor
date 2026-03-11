@@ -1,5 +1,5 @@
 /**
- * ZX(2)SM 機種仕様定義
+ * ZX2SM 機種仕様定義
  * TypeS/M系ビジネスフォンのCSVフォーマットと制限事項
  *
  * 確認済み仕様：
@@ -61,14 +61,14 @@ const allOverrides = {
 };
 
 /**
- * ZX(2)SM 機種仕様
+ * ZX2SM 機種仕様
  */
 export const ZX2SM_SPEC = {
   /** 機種識別ID */
   id: 'zx2sm',
 
   /** 表示名 */
-  name: 'ZX(2)SM',
+  name: 'ZX2SM',
 
   /** 機種ファミリー（TypeS/M系） */
   family: 'typeSM',

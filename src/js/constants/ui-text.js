@@ -26,6 +26,8 @@ export const UI_TEXT = {
     TRUNCATE_ALL: '超過カット',
     DELETE_EMPTY_ROWS: '空行削除',
     GAIJI_SETTINGS: '外字設定',
+    AUTO_ASSIGN_MEMORY: 'メモリ採番',
+    PHONE_PROCESS: '電話番号加工',
   },
 
   /* === テーブル === */
@@ -79,5 +81,7 @@ export const UI_TEXT = {
     INVALID_CSV: '不正なCSV形式です',
     ENCODING_DETECT_FAILED: 'エンコーディングの判定に失敗しました',
     NO_ROWS_SELECTED: '行が選択されていません',
+    DUPLICATE_MEMORY_NO: 'メモリ番号が重複しています',
+    EMPTY_MEMORY_NO: 'メモリ番号が空です',
   },
 };

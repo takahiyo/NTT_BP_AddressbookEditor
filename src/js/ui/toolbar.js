@@ -88,11 +88,19 @@ export function initToolbar(container, handlers) {
 
   container.appendChild(createSeparator());
 
-  /* === 設定グループ === */
   const settingsGroup = document.createElement('div');
   settingsGroup.className = 'toolbar__group';
   settingsGroup.appendChild(createButton('btn-gaiji', UI_TEXT.TOOLBAR.GAIJI_SETTINGS, '⚙️', 'secondary', handlers.onGaijiSettings));
   container.appendChild(settingsGroup);
+
+  container.appendChild(createSeparator());
+
+  /* === 新機能グループ === */
+  const newGroup = document.createElement('div');
+  newGroup.className = 'toolbar__group';
+  newGroup.appendChild(createButton('btn-auto-memory', UI_TEXT.TOOLBAR.AUTO_ASSIGN_MEMORY, '🔢', 'secondary', handlers.onAutoMemory));
+  newGroup.appendChild(createButton('btn-phone-proc',  UI_TEXT.TOOLBAR.PHONE_PROCESS,        '📞', 'secondary', handlers.onPhoneProcess));
+  container.appendChild(newGroup);
 
   return buttons;
 }
@@ -107,6 +115,7 @@ export function updateToolbarState(buttons, hasData) {
     'btn-export', 'btn-delete-row',
     'btn-validate', 'btn-to-half', 'btn-to-full',
     'btn-remove-symbols', 'btn-truncate', 'btn-delete-empty',
+    'btn-auto-memory', 'btn-phone-proc',
   ];
   dataRequiredButtons.forEach(id => {
     if (buttons[id]) {
