@@ -338,10 +338,26 @@ export class TableEditor {
 
       /* セル値変更イベント */
       input.addEventListener('input', (e) => {
-        this._data[rowIndex][col.key] = e.target.value;
-        this._updateByteCount(td, col.key, e.target.value);
+        const value = e.target.value;
+        this._data[rowIndex][col.key] = value;
+        this._updateByteCount(td, col.key, value);
+
+        /* 電話番号入力時にアイコンと属性を自動設定 (1) */
+        if (col.type === 'phone' && value.trim().length > 0) {
+          const index = col.key.replace('phone', '');
+          const iconKey = `icon${index}`;
+          const dialAttrKey = `dialAttr${index}`;
+
+          if (!this._data[rowIndex][iconKey] || this._data[rowIndex][iconKey] === '0') {
+            this._updateCellValue(rowIndex, iconKey, '1');
+          }
+          if (!this._data[rowIndex][dialAttrKey] || this._data[rowIndex][dialAttrKey] === '0') {
+            this._updateCellValue(rowIndex, dialAttrKey, '1');
+          }
+        }
+
         if (this._onCellChange) {
-          this._onCellChange(rowIndex, col.key, e.target.value);
+          this._onCellChange(rowIndex, col.key, value);
         }
       });
 
@@ -351,6 +367,17 @@ export class TableEditor {
       });
 
       td.appendChild(input);
+
+      /* キーナビゲーション（上下移動） */
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          this._focusCell(rowIndex - 1, col.key);
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          this._focusCell(rowIndex + 1, col.key);
+        }
+      });
 
       /* バイトカウント表示要素 */
       const constraint = this._spec?.fieldConstraints?.[col.key];
@@ -447,5 +474,32 @@ export class TableEditor {
     /* チェックボックスの表示を更新 */
     const checkboxes = this._tbodyEl?.querySelectorAll('input[type="checkbox"]');
     checkboxes?.forEach(cb => { cb.checked = checked; });
+  }
+
+  /**
+   * 特定のセルの値を更新して再描画（input要素も同期）
+   * @param {number} rowIndex - 行番号
+   * @param {string} fieldKey - フィールドキー
+   * @param {string} value - 新しい値
+   */
+  _updateCellValue(rowIndex, fieldKey, value) {
+    this._data[rowIndex][fieldKey] = value;
+    const input = document.getElementById(`cell-${rowIndex}-${fieldKey}`);
+    if (input) {
+      input.value = value;
+      const td = input.closest('td');
+      if (td) this._updateByteCount(td, fieldKey, value);
+    }
+  }
+
+  /**
+   * 指定したセルにフォーカスを移動
+   * @param {number} rowIndex - 行番号
+   * @param {string} fieldKey - フィールドキー
+   */
+  _focusCell(rowIndex, fieldKey) {
+    if (rowIndex < 0 || rowIndex >= this._data.length) return;
+    const input = document.getElementById(`cell-${rowIndex}-${fieldKey}`);
+    input?.focus();
   }
 }

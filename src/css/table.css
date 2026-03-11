@@ -59,12 +59,15 @@
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
   font-weight: 600;
-  text-align: left;
+  text-align: center; /* 中央寄せに変更 */
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-bottom: 2px solid var(--color-accent-primary);
-  white-space: nowrap;
+  white-space: normal; /* 折り返しを許可 */
+  word-break: break-all;
+  vertical-align: top; /* 上端揃え */
   user-select: none;
+  min-height: 48px;
 }
 
 .data-table th .col-selector {
@@ -194,8 +197,8 @@ td:focus-within .cell-byte-count {
 .col-furigana { width: 140px; }
 .col-group { width: 60px; }
 .col-phone { width: 180px; }
-.col-icon { width: 55px; }
-.col-dial-attr { width: 55px; }
+.col-icon { width: 65px; }
+.col-dial-attr { width: 65px; }
 
 /* セルのポジション（バイトカウント表示用） */
 .data-table td {

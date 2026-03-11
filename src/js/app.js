@@ -53,14 +53,22 @@ const state = {
  * ============================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
+  initApp();
+});
+
+/** アプリケーションの初期化 */
+function initApp() {
   initSpecs();
-  initTableEditor();
   initToolbarUI();
+  initTableEditor();
+  initTheme(); // テーマ初期化
+
+  /* ファイル関係のイベント登録 */
   initDragDrop();
   initFileInput();
   loadGaijiFromStorage();
   updateStatusBar();
-});
+}
 
 /** 機種セレクターの初期化 */
 function initSpecs() {
@@ -448,6 +456,24 @@ async function handlePhoneProcess() {
   } else {
     showToast(`加工完了（${result.processedCount}件）`, 'success');
   }
+}
+
+/* ============================================
+ * テーマ（ダーク/ライトモード）
+ * ============================================ */
+function initTheme() {
+  const toggle = document.getElementById('theme-toggle');
+  const savedTheme = localStorage.getItem('theme');
+  
+  if (savedTheme === 'light') {
+    document.body.classList.add('light-mode');
+  }
+
+  toggle?.addEventListener('click', () => {
+    document.body.classList.toggle('light-mode');
+    const isLight = document.body.classList.contains('light-mode');
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  });
 }
 
 /* ============================================

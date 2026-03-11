@@ -12,29 +12,31 @@
 export function processPhoneNumber(number, cityCode) {
   if (!number) return { processed: '', isValid: true, originalDigits: 0 };
 
-  /* 記号を削除して数字のみ抽出 */
+  /* 1. 記号を削除して数字のみ抽出 */
   const digits = number.replace(/[^0-9]/g, '');
-  const len = digits.length;
+  
+  /* 2. 先頭が0の番号は0を削除 */
+  const withoutLeadingZero = digits.replace(/^0+/, '');
+  const len = withoutLeadingZero.length;
+  
   let processed = '';
   let isValid = true;
 
-  /* 桁数チェック (6桁、7桁が正常) */
-  if (len !== 6 && len !== 7 && !digits.startsWith('0')) {
+  /* 3. 残った桁数で判定 */
+  if (len === 7) {
+    /* 市内局番から → 市外局番と # を追加 */
+    const prefix = cityCode.startsWith('0') ? cityCode : '0' + cityCode;
+    processed = prefix + withoutLeadingZero + '#';
+  } else if (len === 9 || len === 10) {
+    /* 市外局番(9) または IP/モバイル(10) → 先頭に 0、末尾に # を追加 */
+    processed = '0' + withoutLeadingZero + '#';
+  } else {
+    /* それ以外は元の数字に # を付与（要確認） */
+    processed = (digits.startsWith('0') ? digits : '0' + digits) + '#';
     isValid = false;
   }
 
-  if (digits.startsWith('0')) {
-    /* すでに市外局番やモバイル番号が始まっている場合 (050, 070, 080, 090 等) */
-    processed = digits + '#';
-    /* 10桁 or 11桁を正常とする（簡易） */
-    if (len !== 10 && len !== 11) isValid = false;
-  } else {
-    /* 市外局番を付与 */
-    const prefix = cityCode.startsWith('0') ? cityCode : '0' + cityCode;
-    processed = prefix + digits + '#';
-  }
-
-  return { processed, isValid, originalDigits: len };
+  return { processed, isValid, originalDigits: digits.length };
 }
 
 /**

@@ -97,6 +97,23 @@ export const ZX2SM_SPEC = {
     ...buildPhoneConstraints(PHONE_SLOTS),
   },
 
+  phoneNumberSlots: 3,
+  fields: [
+    { key: 'memoryNo',    label: 'メモリ番号',  type: 'memory', width: 'col-memory' },
+    { key: 'name',        label: '名称',        type: 'text',   width: 'col-name' },
+    { key: 'furigana',    label: 'フリガナ',    type: 'text',   width: 'col-furigana' },
+    { key: 'groupNo',     label: 'グループ',    type: 'text',   width: 'col-group' },
+    { key: 'phone1',      label: '電話番号 1',  type: 'phone',  width: 'col-phone' },
+    { key: 'icon1',       label: 'アイコン 1',  type: 'text',   width: 'col-icon' },
+    { key: 'dialAttr1',   label: '発信属性 1',  type: 'text',   width: 'col-dial-attr' },
+    { key: 'phone2',      label: '電話番号 2',  type: 'phone',  width: 'col-phone' },
+    { key: 'icon2',       label: 'アイコン 2',  type: 'text',   width: 'col-icon' },
+    { key: 'dialAttr2',   label: '発信属性 2',  type: 'text',   width: 'col-dial-attr' },
+    { key: 'phone3',      label: '電話番号 3',  type: 'phone',  width: 'col-phone' },
+    { key: 'icon3',       label: 'アイコン 3',  type: 'text',   width: 'col-icon' },
+    { key: 'dialAttr3',   label: '発信属性 3',  type: 'text',   width: 'col-dial-attr' },
+  ],
+
   /**
    * 桁数モード別メモリ番号範囲
    * shared: 共通電話帳, personal: 個別電話帳
