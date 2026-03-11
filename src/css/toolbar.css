@@ -13,6 +13,8 @@
   border-radius: var(--border-radius-md);
   backdrop-filter: blur(8px);
   flex-wrap: wrap;
+  position: relative; /* 重なり順制御のため追加 */
+  z-index: 20;         /* テーブル(thead:10)より高く設定 */
 }
 
 /* ボタングループの区切り */
