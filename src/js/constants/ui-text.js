@@ -15,6 +15,14 @@ export const UI_TEXT = {
 
   /* === ツールバー === */
   TOOLBAR: {
+    CATEGORIES: {
+      FILE: 'ファイル',
+      EDIT_ROW: '行編集',
+      EDIT_COL: '列編集',
+      GENERAL: '全体',
+      PHONE_PROC: '電話番号加工',
+      VALIDATE: '全検証',
+    },
     IMPORT_CSV: 'CSV読込',
     EXPORT_CSV: 'CSV書出',
     ADD_ROW: '行追加',

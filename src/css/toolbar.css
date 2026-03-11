@@ -41,7 +41,82 @@
   transition: all var(--transition-fast);
   white-space: nowrap;
   position: relative;
-  overflow: hidden;
+  cursor: pointer;
+  border: none;
+}
+
+/* ドロップダウンコンテナ */
+.toolbar__dropdown {
+  position: relative;
+}
+
+/* ドロップダウンメニュー */
+.toolbar__dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: var(--color-bg-elevated);
+  border: var(--border-width) solid var(--color-glass-border);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-xs);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 160px;
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(12px);
+  z-index: 100;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all var(--transition-base);
+}
+
+.toolbar__dropdown.is-active .toolbar__dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* メニュー内のボタン調整 */
+.toolbar__dropdown-menu .toolbar__btn {
+  width: 100%;
+  justify-content: flex-start;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: transparent;
+  color: var(--color-text-primary);
+  border: none;
+}
+
+.toolbar__dropdown-menu .toolbar__btn:hover {
+  background: rgba(108, 138, 255, 0.1);
+  color: var(--color-accent-primary);
+}
+
+.toolbar__dropdown-menu .toolbar__btn--primary {
+  color: var(--color-accent-primary);
+  font-weight: 600;
+}
+
+.toolbar__dropdown-menu .toolbar__btn--warning {
+  color: var(--color-error);
+}
+
+.toolbar__dropdown-menu .toolbar__btn--warning:hover {
+  background: var(--color-error-bg);
+}
+
+/* ドロップダウン矢印 */
+.toolbar__dropdown-arrow {
+  font-size: 0.7em;
+  margin-left: 4px;
+  opacity: 0.6;
+  transition: transform var(--transition-fast);
+}
+
+.toolbar__dropdown.is-active .toolbar__dropdown-arrow {
+  transform: rotate(180deg);
 }
 
 /* リップルエフェクト用 */
@@ -61,7 +136,7 @@
   transition: opacity 0s, transform 0s;
 }
 
-/* プライマリボタン */
+/* プライマリボタン (ドロップダウン外で使用時用) */
 .toolbar__btn--primary {
   background: var(--color-accent-gradient);
   color: var(--color-text-inverse);
@@ -74,21 +149,21 @@
 
 /* セカンダリボタン */
 .toolbar__btn--secondary {
-  background: var(--color-bg-tertiary);
+  background: var(--color-glass-bg);
   color: var(--color-text-primary);
-  border: var(--border-width) solid var(--color-glass-border);
+  border: var(--border-width) solid var(--color-glass-border) !important;
 }
 
 .toolbar__btn--secondary:hover {
   background: rgba(108, 138, 255, 0.1);
-  border-color: var(--color-accent-primary);
+  border-color: var(--color-accent-primary) !important;
 }
 
-/* 警告ボタン */
+/* 警告ボタン (ドロップダウン外で使用時用) */
 .toolbar__btn--warning {
   background: var(--color-warning-bg);
   color: var(--color-warning);
-  border: var(--border-width) solid var(--color-warning-border);
+  border: var(--border-width) solid var(--color-warning-border) !important;
 }
 
 .toolbar__btn--warning:hover {
@@ -97,10 +172,11 @@
 
 /* 無効状態 */
 .toolbar__btn:disabled {
-  opacity: 0.4;
+  opacity: 0.3;
   cursor: not-allowed;
   transform: none !important;
   box-shadow: none !important;
+  filter: grayscale(1);
 }
 
 /* ボタンアイコン */

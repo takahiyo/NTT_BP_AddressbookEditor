@@ -43,64 +43,75 @@ export function initToolbar(container, handlers) {
     return sep;
   };
 
-  /* === ファイル操作グループ === */
-  const fileGroup = document.createElement('div');
-  fileGroup.className = 'toolbar__group';
-  fileGroup.appendChild(createButton('btn-import', UI_TEXT.TOOLBAR.IMPORT_CSV,  '📂', 'primary',   handlers.onImport));
-  fileGroup.appendChild(createButton('btn-export', UI_TEXT.TOOLBAR.EXPORT_CSV,  '💾', 'primary',   handlers.onExport));
-  container.appendChild(fileGroup);
+  /**
+   * ドロップダウンを生成するヘルパー
+   * @param {string} label - 表示テキスト
+   * @param {string} icon - アイコン絵文字
+   * @returns {Object} { container, menu }
+   */
+  const createDropdown = (label, icon) => {
+    const dropdown = document.createElement('div');
+    dropdown.className = 'toolbar__dropdown';
 
-  container.appendChild(createSeparator());
+    const toggle = document.createElement('button');
+    toggle.className = 'toolbar__btn toolbar__btn--secondary toolbar__dropdown-toggle';
+    toggle.innerHTML = `<span class="toolbar__btn-icon">${icon}</span>${label}<span class="toolbar__dropdown-arrow">▼</span>`;
+    
+    const menu = document.createElement('div');
+    menu.className = 'toolbar__dropdown-menu';
 
-  /* === 行操作グループ === */
-  const rowGroup = document.createElement('div');
-  rowGroup.className = 'toolbar__group';
-  rowGroup.appendChild(createButton('btn-add-row',    UI_TEXT.TOOLBAR.ADD_ROW,    '➕', 'secondary', handlers.onAddRow));
-  rowGroup.appendChild(createButton('btn-delete-row', UI_TEXT.TOOLBAR.DELETE_ROW, '🗑️', 'secondary', handlers.onDeleteRow));
-  container.appendChild(rowGroup);
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isActive = dropdown.classList.contains('is-active');
+      // 他のドロップダウンを閉じる
+      document.querySelectorAll('.toolbar__dropdown').forEach(d => d.classList.remove('is-active'));
+      if (!isActive) {
+        dropdown.classList.add('is-active');
+      }
+    });
 
-  container.appendChild(createSeparator());
+    dropdown.appendChild(toggle);
+    dropdown.appendChild(menu);
+    container.appendChild(dropdown);
 
-  /* === バリデーショングループ === */
-  const validGroup = document.createElement('div');
-  validGroup.className = 'toolbar__group';
-  validGroup.appendChild(createButton('btn-validate', UI_TEXT.TOOLBAR.VALIDATE_ALL, '✅', 'secondary', handlers.onValidate));
-  container.appendChild(validGroup);
+    return { container: dropdown, menu };
+  };
 
-  container.appendChild(createSeparator());
+  // ドキュメントクリックでドロップダウンを閉じる
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.toolbar__dropdown').forEach(d => d.classList.remove('is-active'));
+  });
 
-  /* === 変換グループ === */
-  const convertGroup = document.createElement('div');
-  convertGroup.className = 'toolbar__group';
-  convertGroup.appendChild(createButton('btn-to-half',       UI_TEXT.TOOLBAR.CONVERT_HALFWIDTH, '㊀', 'secondary', handlers.onToHalf));
-  convertGroup.appendChild(createButton('btn-to-full',       UI_TEXT.TOOLBAR.CONVERT_FULLWIDTH, '㊁', 'secondary', handlers.onToFull));
-  convertGroup.appendChild(createButton('btn-remove-symbols', UI_TEXT.TOOLBAR.REMOVE_SYMBOLS,  '✂️', 'secondary', handlers.onRemoveSymbols));
-  container.appendChild(convertGroup);
+  /* === ファイル === */
+  const fileDrop = createDropdown(UI_TEXT.TOOLBAR.CATEGORIES.FILE, '📁');
+  fileDrop.menu.appendChild(createButton('btn-import', UI_TEXT.TOOLBAR.IMPORT_CSV, '📂', 'primary', handlers.onImport));
+  fileDrop.menu.appendChild(createButton('btn-export', UI_TEXT.TOOLBAR.EXPORT_CSV, '💾', 'primary', handlers.onExport));
 
-  container.appendChild(createSeparator());
+  /* === 行編集 === */
+  const rowDrop = createDropdown(UI_TEXT.TOOLBAR.CATEGORIES.EDIT_ROW, '📝');
+  rowDrop.menu.appendChild(createButton('btn-add-row', UI_TEXT.TOOLBAR.ADD_ROW, '➕', 'secondary', handlers.onAddRow));
+  rowDrop.menu.appendChild(createButton('btn-delete-row', UI_TEXT.TOOLBAR.DELETE_ROW, '🗑️', 'secondary', handlers.onDeleteRow));
 
-  /* === 一括処理グループ === */
-  const batchGroup = document.createElement('div');
-  batchGroup.className = 'toolbar__group';
-  batchGroup.appendChild(createButton('btn-truncate',     UI_TEXT.TOOLBAR.TRUNCATE_ALL,      '📏', 'warning',   handlers.onTruncate));
-  batchGroup.appendChild(createButton('btn-delete-empty', UI_TEXT.TOOLBAR.DELETE_EMPTY_ROWS,  '🧹', 'warning',   handlers.onDeleteEmpty));
-  container.appendChild(batchGroup);
+  /* === 列編集 === */
+  const colDrop = createDropdown(UI_TEXT.TOOLBAR.CATEGORIES.EDIT_COL, '📊');
+  colDrop.menu.appendChild(createButton('btn-to-half', UI_TEXT.TOOLBAR.CONVERT_HALFWIDTH, '㊀', 'secondary', handlers.onToHalf));
+  colDrop.menu.appendChild(createButton('btn-to-full', UI_TEXT.TOOLBAR.CONVERT_FULLWIDTH, '㊁', 'secondary', handlers.onToFull));
+  colDrop.menu.appendChild(createButton('btn-remove-symbols', UI_TEXT.TOOLBAR.REMOVE_SYMBOLS, '✂️', 'secondary', handlers.onRemoveSymbols));
 
-  container.appendChild(createSeparator());
+  /* === 全体 === */
+  const generalDrop = createDropdown(UI_TEXT.TOOLBAR.CATEGORIES.GENERAL, '⚙️');
+  generalDrop.menu.appendChild(createButton('btn-auto-memory', UI_TEXT.TOOLBAR.AUTO_ASSIGN_MEMORY, '🔢', 'secondary', handlers.onAutoMemory));
+  generalDrop.menu.appendChild(createButton('btn-truncate', UI_TEXT.TOOLBAR.TRUNCATE_ALL, '📏', 'warning', handlers.onTruncate));
+  generalDrop.menu.appendChild(createButton('btn-delete-empty', UI_TEXT.TOOLBAR.DELETE_EMPTY_ROWS, '🧹', 'warning', handlers.onDeleteEmpty));
+  generalDrop.menu.appendChild(createButton('btn-gaiji', UI_TEXT.TOOLBAR.GAIJI_SETTINGS, '⚙️', 'secondary', handlers.onGaijiSettings));
 
-  const settingsGroup = document.createElement('div');
-  settingsGroup.className = 'toolbar__group';
-  settingsGroup.appendChild(createButton('btn-gaiji', UI_TEXT.TOOLBAR.GAIJI_SETTINGS, '⚙️', 'secondary', handlers.onGaijiSettings));
-  container.appendChild(settingsGroup);
+  /* === 電話番号加工 === */
+  const phoneBtn = createButton('btn-phone-proc', UI_TEXT.TOOLBAR.CATEGORIES.PHONE_PROC, '📞', 'secondary', handlers.onPhoneProcess);
+  container.appendChild(phoneBtn);
 
-  container.appendChild(createSeparator());
-
-  /* === 新機能グループ === */
-  const newGroup = document.createElement('div');
-  newGroup.className = 'toolbar__group';
-  newGroup.appendChild(createButton('btn-auto-memory', UI_TEXT.TOOLBAR.AUTO_ASSIGN_MEMORY, '🔢', 'secondary', handlers.onAutoMemory));
-  newGroup.appendChild(createButton('btn-phone-proc',  UI_TEXT.TOOLBAR.PHONE_PROCESS,        '📞', 'secondary', handlers.onPhoneProcess));
-  container.appendChild(newGroup);
+  /* === 全検証 === */
+  const validateBtn = createButton('btn-validate', UI_TEXT.TOOLBAR.CATEGORIES.VALIDATE, '✅', 'secondary', handlers.onValidate);
+  container.appendChild(validateBtn);
 
   return buttons;
 }

@@ -106,4 +106,9 @@
   --table-row-hover: rgba(59, 130, 246, 0.05);
   --table-row-alt: rgba(0, 0, 0, 0.01);
   --table-border-color: rgba(0, 0, 0, 0.08);
+
+  /* 文字が見づらい黄色系統を赤系統に変更 */
+  --color-warning: #dc2626;
+  --color-warning-bg: rgba(220, 38, 38, 0.08);
+  --color-warning-border: rgba(220, 38, 38, 0.3);
 }
