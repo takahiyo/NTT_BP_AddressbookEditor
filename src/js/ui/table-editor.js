@@ -96,8 +96,12 @@ export class TableEditor {
     }
 
     const newRow = {};
-    this._columns.forEach(col => {
-      newRow[col.key] = col.type === 'number' ? '0' : '';
+    this._spec.fields.forEach(f => {
+      newRow[f.key] = '';
+      /* アイコン番号のデフォルトは1 (0は不可) */
+      if (f.key.startsWith('icon')) {
+        newRow[f.key] = '1';
+      }
     });
 
     this._data.splice(insertAt, 0, newRow);

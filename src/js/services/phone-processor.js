@@ -53,20 +53,22 @@ export function processAllPhoneNumbers(data, slots, cityCode) {
   const newData = data.map(row => {
     const newRow = { ...row };
     for (let i = 1; i <= slots; i++) {
-      const key = `phone${i}`;
-      if (row[key]) {
-        const result = processPhoneNumber(row[key], cityCode);
-        newRow[key] = result.processed;
+      const phoneKey = `phone${i}`;
+      const iconKey = `icon${i}`;
+
+      /* 1. 電話番号加工 */
+      if (row[phoneKey]) {
+        const result = processPhoneNumber(row[phoneKey], cityCode);
+        newRow[phoneKey] = result.processed;
         if (!result.isValid) {
           errorCount++;
-          /* 実装上の注意：
-             ここで個別にハイライトを指定するのではなく、
-             後のバリデーションで「桁数がおかしい」と出せるとSSOT的に良い。
-             今回は指示通り「ハイライトさせる」ため、
-             バリデーションエンジン側に桁数チェックを組み込む方針にする。
-          */
         }
         processedCount++;
+      }
+
+      /* 2. アイコン番号が 0 の場合は 1 に修正 */
+      if (!newRow[iconKey] || newRow[iconKey] === '0') {
+        newRow[iconKey] = '1';
       }
     }
     return newRow;
