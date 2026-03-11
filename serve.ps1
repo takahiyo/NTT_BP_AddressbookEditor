@@ -15,7 +15,7 @@ $mimeTypes = @{
     ".ico"  = "image/x-icon"
 }
 
-$basePath = "c:\TEMP\GitHub\NTT_BP_AddressbookEditor\NTT_BP_AddressbookEditor\src"
+$basePath = "c:\TEMP\GitHub\NTT_BP_AddressbookEditor\NTT_BP_AddressbookEditor"
 
 while ($listener.IsListening) {
     $context = $listener.GetContext()
