@@ -1,0 +1,110 @@
+/* ============================================
+ * ツールバー
+ * CSV操作、変換、一括処理ボタン群
+ * ============================================ */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-glass-bg);
+  border: var(--border-width) solid var(--color-glass-border);
+  border-radius: var(--border-radius-md);
+  backdrop-filter: blur(8px);
+  flex-wrap: wrap;
+}
+
+/* ボタングループの区切り */
+.toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.toolbar__separator {
+  width: 1px;
+  height: 24px;
+  background: var(--color-glass-border);
+  margin: 0 var(--spacing-xs);
+}
+
+/* === ツールバーボタン共通 === */
+.toolbar__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+}
+
+/* リップルエフェクト用 */
+.toolbar__btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+  opacity: 0;
+  transform: scale(0);
+  transition: opacity 0.4s, transform 0.4s;
+}
+
+.toolbar__btn:active::after {
+  opacity: 1;
+  transform: scale(2);
+  transition: opacity 0s, transform 0s;
+}
+
+/* プライマリボタン */
+.toolbar__btn--primary {
+  background: var(--color-accent-gradient);
+  color: var(--color-text-inverse);
+}
+
+.toolbar__btn--primary:hover {
+  box-shadow: 0 2px 12px rgba(108, 138, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+/* セカンダリボタン */
+.toolbar__btn--secondary {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border: var(--border-width) solid var(--color-glass-border);
+}
+
+.toolbar__btn--secondary:hover {
+  background: rgba(108, 138, 255, 0.1);
+  border-color: var(--color-accent-primary);
+}
+
+/* 警告ボタン */
+.toolbar__btn--warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  border: var(--border-width) solid var(--color-warning-border);
+}
+
+.toolbar__btn--warning:hover {
+  background: rgba(251, 191, 36, 0.2);
+}
+
+/* 無効状態 */
+.toolbar__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* ボタンアイコン */
+.toolbar__btn-icon {
+  font-size: 1.1em;
+  line-height: 1;
+}

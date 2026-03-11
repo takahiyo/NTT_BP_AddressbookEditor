@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="NTTビジネスフォン用電話帳CSVデータの編集・変換ツール。クライアントサイドで完結し、データの安全性を確保。">
+  <title>NTT電話帳エディタ - ビジネスフォン電話帳CSV編集ツール</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Shift_JISエンコードライブラリ（クライアントサイドでShift_JIS出力に必要） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/encoding-japanese/2.2.0/encoding.min.js"></script>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/toolbar.css">
+  <link rel="stylesheet" href="css/table.css">
+  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="css/animations.css">
+</head>
+<body>
+  <div id="app">
+    <!-- ===== ヘッダー ===== -->
+    <header class="app-header">
+      <div class="app-header__title">
+        <h1>NTT電話帳エディタ</h1>
+        <span class="subtitle">ビジネスフォン電話帳CSV編集ツール</span>
+      </div>
+      <div class="app-header__controls">
+        <!-- 入力機種セレクター -->
+        <div class="model-selector">
+          <label for="input-model-select">入力機種:</label>
+          <select id="input-model-select"></select>
+        </div>
+        <!-- 出力機種セレクター -->
+        <div class="model-selector">
+          <label for="output-model-select">出力機種:</label>
+          <select id="output-model-select"></select>
+        </div>
+        <!-- 桁数モードセレクター -->
+        <div class="model-selector">
+          <label for="digit-mode-select">桁数モード:</label>
+          <select id="digit-mode-select"></select>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===== メインコンテンツ ===== -->
+    <main class="app-main">
+      <!-- ツールバー -->
+      <div id="toolbar" class="toolbar"></div>
+
+      <!-- テーブルエディタ -->
+      <div id="table-container" class="table-container"></div>
+    </main>
+
+    <!-- ===== ステータスバー ===== -->
+    <footer class="app-statusbar">
+      <div class="statusbar__left">
+        <span id="status-rows" class="statusbar__item">件数: 0</span>
+        <span id="status-errors" class="statusbar__item">エラー: 0</span>
+        <span id="status-warnings" class="statusbar__item">警告: 0</span>
+      </div>
+      <div class="statusbar__right">
+        <span id="status-model" class="statusbar__item">機種: -</span>
+        <span id="status-encoding" class="statusbar__item">エンコーディング: -</span>
+      </div>
+    </footer>
+
+    <!-- ===== ドラッグ＆ドロップオーバーレイ ===== -->
+    <div id="drop-overlay" class="drop-overlay">
+      <span class="drop-overlay__text">📂 CSVファイルをドロップ</span>
+    </div>
+
+    <!-- ===== 隠しファイル入力 ===== -->
+    <input type="file" id="file-input" accept=".csv" style="display: none;">
+  </div>
+
+  <!-- アプリケーションJS（ESモジュール） -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

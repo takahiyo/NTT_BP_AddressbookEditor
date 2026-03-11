@@ -1,0 +1,119 @@
+/* ============================================
+ * レイアウト
+ * ヘッダー、メインコンテンツ、ステータスバー
+ * ============================================ */
+
+/* === アプリ全体構造 === */
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* === ヘッダー === */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--color-bg-elevated);
+  backdrop-filter: blur(12px);
+  border-bottom: var(--border-width) solid var(--color-glass-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.app-header__title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.app-header__title h1 {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  background: var(--color-accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  white-space: nowrap;
+}
+
+.app-header__title .subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-left: var(--spacing-sm);
+}
+
+/* ヘッダー内の機種選択エリア */
+.app-header__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.model-selector {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.model-selector label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.model-selector select {
+  min-width: 160px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+/* === メインコンテンツ === */
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-md) var(--spacing-lg);
+  gap: var(--spacing-md);
+  overflow: hidden;
+}
+
+/* === ステータスバー === */
+.app-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-xs) var(--spacing-lg);
+  background: var(--color-bg-secondary);
+  border-top: var(--border-width) solid var(--color-glass-border);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.statusbar__left,
+.statusbar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.statusbar__item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+/* ステータスアイコン（エラー/警告カウント） */
+.statusbar__count--error {
+  color: var(--color-error);
+}
+
+.statusbar__count--warning {
+  color: var(--color-warning);
+}
+
+.statusbar__count--ok {
+  color: var(--color-success);
+}
