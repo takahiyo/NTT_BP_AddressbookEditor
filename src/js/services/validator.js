@@ -190,6 +190,30 @@ export function validateRow(rowData, spec, gaijiChars = new Set()) {
     results._rowErrors = rowErrors;
   }
 
+  /* === 電話番号と連動するフィールドの検証 === */
+  for (let i = 1; i <= spec.phoneNumberSlots; i++) {
+    const phoneVal = rowData[`phone${i}`];
+    if (phoneVal && phoneVal.trim().length > 0) {
+      /* アイコン番号のチェック (1-8) */
+      const iconKey = `icon${i}`;
+      const iconVal = rowData[iconKey];
+      const iconNum = parseInt(iconVal, 10);
+      if (isNaN(iconNum) || iconNum < 1 || iconNum > 8) {
+        if (!results[iconKey]) results[iconKey] = [];
+        results[iconKey].push(createResult(SEVERITY.ERROR, 'アイコン番号は1-8の範囲で指定してください'));
+      }
+
+      /* 発信番号属性のチェック (1,2) */
+      const dialAttrKey = `dialAttr${i}`;
+      const dialAttrVal = rowData[dialAttrKey];
+      const dialAttrNum = parseInt(dialAttrVal, 10);
+      if (dialAttrNum !== 1 && dialAttrNum !== 2) {
+        if (!results[dialAttrKey]) results[dialAttrKey] = [];
+        results[dialAttrKey].push(createResult(SEVERITY.ERROR, '発信番号属性は1または2を指定してください'));
+      }
+    }
+  }
+
   return results;
 }
 
