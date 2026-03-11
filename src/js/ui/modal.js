@@ -152,3 +152,46 @@ export function showGaijiEditor(currentGaiji) {
     });
   });
 }
+
+/**
+ * 市外局番入力モーダルを表示
+ * @returns {Promise<string|null>} 保存時は市外局番、キャンセル時はnull
+ */
+export function showCityCodeModal() {
+  return new Promise(resolve => {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'gaiji-editor'; // スタイル流用
+    input.style.height = 'auto';
+    input.placeholder = '例: 052';
+    input.id = 'city-code-input';
+
+    const container = document.createElement('div');
+    const desc = document.createElement('p');
+    desc.textContent = '市外局番を指定してください（AB-J変換用）';
+    desc.style.marginBottom = '12px';
+    desc.style.color = 'var(--color-text-secondary)';
+    container.appendChild(desc);
+    container.appendChild(input);
+
+    const { close } = showModal({
+      title: '市外局番設定',
+      content: container,
+      buttons: [
+        {
+          label: UI_TEXT.MODAL.BTN_CANCEL,
+          style: 'secondary',
+          onClick: () => { close(); resolve(null); },
+        },
+        {
+          label: '変換実行',
+          style: 'primary',
+          onClick: () => { close(); resolve(input.value); },
+        },
+      ],
+    });
+
+    /* 自動フォーカス */
+    setTimeout(() => input.focus(), 100);
+  });
+}
