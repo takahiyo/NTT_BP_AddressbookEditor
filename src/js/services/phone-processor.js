@@ -14,26 +14,40 @@ export function processPhoneNumber(number, cityCode) {
 
   /* 1. 記号を削除して数字のみ抽出 */
   const digits = number.replace(/[^0-9]/g, '');
+  const hasLeadingZero = digits.startsWith('0');
   
-  /* 2. 先頭が0の番号は0を削除 */
-  const withoutLeadingZero = digits.replace(/^0+/, '');
-  const len = withoutLeadingZero.length;
+  /* 2. 市外局番の正規化と桁数取得 */
+  const normalizedCityCode = cityCode.startsWith('0') ? cityCode : '0' + cityCode;
+  const cityCodeLen = normalizedCityCode.length;
+  
+  /* 標準的なターゲット桁数 */
+  const TARGET_FIXED_LEN = 10; // 固定電話 (03-XXXX-XXXX 等)
+  const TARGET_MOBILE_LEN = 11; // 携帯・IP電話 (090-XXXX-XXXX 等)
   
   let processed = '';
   let isValid = true;
 
-  /* 3. 残った桁数で判定 */
-  if (len === 7) {
-    /* 市内局番から → 市外局番と # を追加 */
-    const prefix = cityCode.startsWith('0') ? cityCode : '0' + cityCode;
-    processed = prefix + withoutLeadingZero + '#';
-  } else if (len === 9 || len === 10) {
-    /* 市外局番(9) または IP/モバイル(10) → 先頭に 0、末尾に # を追加 */
-    processed = '0' + withoutLeadingZero + '#';
+  /* 3. 加工ロジック */
+  if (hasLeadingZero) {
+    /* すでに 0 から始まる場合：そのまま末尾に # を付与 */
+    processed = digits + '#';
+    // 桁数チェック（10桁または11桁なら妥当）
+    if (digits.length !== TARGET_FIXED_LEN && digits.length !== TARGET_MOBILE_LEN) {
+      isValid = false; 
+    }
   } else {
-    /* それ以外は元の数字に # を付与（要確認） */
-    processed = (digits.startsWith('0') ? digits : '0' + digits) + '#';
-    isValid = false;
+    /* 0 から始まらない場合 */
+    if (digits.length === (TARGET_FIXED_LEN - cityCodeLen)) {
+      /* 市内局番のみと判断：市外局番を補完して末尾に # */
+      processed = normalizedCityCode + digits + '#';
+    } else if (digits.length === 9 || digits.length === 10) {
+      /* 先頭の 0 が抜けているだけと判断：0 を補完して末尾に # */
+      processed = '0' + digits + '#';
+    } else {
+      /* それ以外：先頭に 0 を付けて末尾に #（未完成の番号として扱う） */
+      processed = '0' + digits + '#';
+      isValid = false;
+    }
   }
 
   return { processed, isValid, originalDigits: digits.length };
