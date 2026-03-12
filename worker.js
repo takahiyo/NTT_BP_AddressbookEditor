@@ -10,28 +10,31 @@ const YAHOO_API_URL = "https://jlp.yahooapis.jp/FuriganaService/V2/furigana";
 
 export default {
   async fetch(request, env) {
+    const origin = request.headers.get("Origin");
+
     // CORS: プリフライトリクエスト対応
     if (request.method === "OPTIONS") {
       return new Response(null, {
-        headers: corsHeaders(),
+        headers: corsHeaders(origin),
       });
     }
 
     if (request.method !== "POST") {
-      return jsonResponse({ error: "POST のみ対応しています" }, 405);
+      return jsonResponse({ error: "POST のみ対応しています" }, 405, origin);
     }
 
     try {
       const { names } = await request.json(); // 例: ["中村", "佐藤", "株式会社テスト"]
       if (!Array.isArray(names) || names.length === 0) {
-        return jsonResponse({ error: "names は空でない配列で指定してください" }, 400);
+        return jsonResponse({ error: "names は空でない配列で指定してください" }, 400, origin);
       }
 
       // Yahoo! API キーは Cloudflare の環境変数（シークレット）から取得
       const appId = env.YAHOO_APP_ID;
       if (!appId) {
-        return jsonResponse({ error: "YAHOO_APP_ID が設定されていません" }, 500);
+        return jsonResponse({ error: "YAHOO_APP_ID が設定されていません" }, 500, origin);
       }
+
 
       // 各名称を Yahoo! API に問い合わせ
       const readings = {};
@@ -114,22 +117,30 @@ function hiraganaToKatakana(str) {
 }
 
 /** CORS ヘッダー */
-function corsHeaders() {
+function corsHeaders(requestOrigin) {
+  const allowedOrigins = [
+    "https://ntt-bp-addressbookeditor.pages.dev",
+    "https://dev.ntt-bp-addressbookeditor.pages.dev"
+  ];
+  
+  // マッチすればそのOriginを返し、しなければ本番URLを返す
+  const origin = allowedOrigins.includes(requestOrigin) ? requestOrigin : allowedOrigins[0];
+
   return {
-    "Access-Control-Allow-Origin": "https://ntt-bp-addressbookeditor.pages.dev",
+    "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
 }
 
-
 /** JSON レスポンスヘルパー */
-function jsonResponse(data, status = 200) {
+function jsonResponse(data, status = 200, requestOrigin = null) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       "Content-Type": "application/json",
-      ...corsHeaders(),
+      ...corsHeaders(requestOrigin),
     },
   });
 }
+
