@@ -82,7 +82,8 @@ function toHiraganaToKatakana(str) {
 export function processAllFurigana(data, spec) {
   const result = [];
   const nameKey = spec.columns.find(col => col.key.includes('name'))?.key || 'name';
-  const kanaKey = spec.columns.find(col => col.key.includes('kana'))?.key || 'kana';
+  const kanaKey = spec.columns.find(col => col.key.includes('furigana') || col.key.includes('kana'))?.key || 'furigana';
+
 
   data.forEach((row, index) => {
     const name = row[nameKey] || '';
