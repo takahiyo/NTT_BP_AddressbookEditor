@@ -4,15 +4,15 @@
  *
  * 処理フロー:
  * 1. 名称から記号を除去
- * 2. kuromoji.js（形態素解析）でトークンに分割
- * 3. 各トークンを処理:
- *    - 英数字 → ALPHANUM_TO_KANA マッピングで変換
- *    - それ以外 → kuromoji の reading（カタカナ）を使用
- * 4. 半角カタカナに変換して出力
+ * 2. 独自のかな辞書（FURIGANA_DICT）で頻出漢字をカタカナ読みに置換
+ * 3. 英数字をカタカナ読みに変換（ALPHANUM_TO_KANA）
+ * 4. ひらがな・全角カタカナをそのまま利用
+ * 5. それ以外の未解決漢字等はフォールバックとして除去
+ * 6. 半角カタカナに変換して出力
  */
 
 import { toHalfWidthKana, removeSymbols } from './converter.js';
-import { tokenize } from '../utils/tokenizer.js';
+import { applyDictionary } from '../utils/furigana-dict.js';
 import { createLogger } from '../utils/logger.js';
 
 const log = createLogger('furigana');
@@ -44,69 +44,65 @@ const ALPHANUM_TO_KANA = {
 };
 
 /* ============================================
- * ヘルパー
+ * 文字種別判定ヘルパー
  * ============================================ */
 
-/** 文字列が全て英数字（マッピング対象）かどうかを判定 */
-function isAllAlphaNum(str) {
-  for (const ch of str) {
-    if (!ALPHANUM_TO_KANA[ch]) return false;
-  }
-  return str.length > 0;
+function isHiragana(char) {
+  const code = char.charCodeAt(0);
+  return code >= 0x3041 && code <= 0x3096;
 }
 
-/** 英数字文字列をカタカナ読みに変換 */
-function alphaNumToKana(str) {
-  let result = '';
-  for (const ch of str) {
-    result += ALPHANUM_TO_KANA[ch] || ch;
-  }
-  return result;
+function isKatakana(char) {
+  const code = char.charCodeAt(0);
+  return code >= 0x30A1 && code <= 0x30FA; // ヺまで
 }
 
 /* ============================================
- * トークンベースのフリガナ生成
+ * フリガナ生成
  * ============================================ */
 
 /**
- * kuromoji トークン配列からフリガナを生成
- * - 英数字トークン → 独自マッピング（ALPHANUM_TO_KANA）
- * - それ以外 → kuromoji の reading を使用
- * - 記号トークン → スキップ
- * @param {Array<Object>} tokens - kuromoji トークン配列
+ * ひらがなをカタカナに変換
+ */
+function hiraganaToKatakana(str) {
+  return str.replace(/[\u3041-\u3096]/g, match =>
+    String.fromCharCode(match.charCodeAt(0) + 0x60)
+  );
+}
+
+/**
+ * 名称から半角カタカナのフリガナを生成
+ * @param {string} name - 名称
  * @returns {string} 半角カタカナのフリガナ
  */
-function tokensToFurigana(tokens) {
+export function generateFurigana(name) {
+  if (!name) return '';
+
+  // 1. 記号を除去
+  const cleaned = removeSymbols(name);
+
+  // 2. 辞書マッチングで頻出漢字（苗字・法人名など）をカタカナ読みに置換
+  const dictApplied = applyDictionary(cleaned);
+
+  // 3. 1文字ずつ判定して結合
   let katakana = '';
-
-  for (const token of tokens) {
-    const surface = token.surface_form;
-
-    // 記号はスキップ
-    if (/^[\s()（）\[\]【】「」『』、。,.・\-#＃]+$/.test(surface)) {
-      continue;
+  for (const char of dictApplied) {
+    if (ALPHANUM_TO_KANA[char]) {
+      katakana += ALPHANUM_TO_KANA[char]; // 英数字
+    } else if (isHiragana(char)) {
+      katakana += String.fromCharCode(char.charCodeAt(0) + 0x60); // ひらがな→カタカナ
+    } else if (isKatakana(char) || char === 'ー' || char === '・') {
+      katakana += char; // カタカナや長音記号はそのまま
     }
-
-    // 英数字トークン → 独自マッピング
-    if (isAllAlphaNum(surface)) {
-      katakana += alphaNumToKana(surface);
-      continue;
-    }
-
-    // それ以外 → kuromoji の reading を使用（全角カタカナ）
-    if (token.reading) {
-      katakana += token.reading;
-    } else if (token.pronunciation) {
-      katakana += token.pronunciation;
-    }
-    // reading も pronunciation もない場合（未知語等）はスキップ
+    // 未解決の漢字等はスキップ（除去）される
   }
 
+  // 4. 半角カナに変換し、一般的な24文字制限に収める
   return toHalfWidthKana(katakana).substring(0, 24);
 }
 
 /* ============================================
- * 一括処理（非同期・kuromoji使用）
+ * 一括処理
  * ============================================ */
 
 /**
@@ -122,24 +118,18 @@ export async function processAllFurigana(data, spec) {
 
   log.info('フリガナ一括生成を開始', { rows: data.length, nameKey, kanaKey });
 
-  for (let i = 0; i < data.length; i++) {
-    const name = data[i][nameKey] || '';
-    if (!name) continue;
+  // 同期的に全行処理可能になった
+  data.forEach((row, index) => {
+    const name = row[nameKey] || '';
+    if (!name) return;
 
     try {
-      // kuromoji で形態素解析
-      const tokens = await tokenize(name);
-      log.debug(`トークン化 [${i}]`, { 
-        name, 
-        tokens: tokens.map(t => `${t.surface_form}→${t.reading || '?'}`)
-      });
-
-      const generated = tokensToFurigana(tokens);
-      const current = data[i][kanaKey] || '';
+      const generated = generateFurigana(name);
+      const current = row[kanaKey] || '';
 
       if (generated && generated !== current) {
         result.push({
-          index: i,
+          index,
           fieldKey: kanaKey,
           current,
           generated,
@@ -147,9 +137,9 @@ export async function processAllFurigana(data, spec) {
         });
       }
     } catch (err) {
-      log.warn(`フリガナ生成失敗 [${i}]`, { name, error: err.message });
+      log.warn(`フリガナ生成失敗 [${index}]`, { name, error: err.message });
     }
-  }
+  });
 
   log.info('フリガナ一括生成を完了', { 
     totalRows: data.length, 
