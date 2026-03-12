@@ -52,9 +52,9 @@ export default {
 
       await Promise.all(tasks);
 
-      return jsonResponse({ readings });
+      return jsonResponse({ readings }, 200, origin);
     } catch (err) {
-      return jsonResponse({ error: err.message }, 500);
+      return jsonResponse({ error: err.message }, 500, origin);
     }
   },
 };
