@@ -1,0 +1,8 @@
+name = "furigana-api"
+main = "worker.js"
+compatibility_date = "2024-03-12"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "furigana_db"
+database_id = "xxxx-xxxx-xxxx-xxxx" # npx wrangler d1 create furigana_db で生成された ID に書き換えてください

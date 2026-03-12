@@ -1,28 +1,19 @@
 /**
  * フリガナ生成サービス
- * 名称からフリガナ（半角カタカナ）を推測・生成する
- *
- * 処理フロー:
- * 1. 名称から記号を除去
- * 2. ユーザー辞書 + 内蔵辞書（FURIGANA_DICT）でマッチング
- *    - まずは最長一致（氏名まるごと、または苗字のみ等）を試行
- *    - 未解決の漢字がある場合、1文字ずつに分解して再試行
- * 3. 英数字をカタカナ読みに変換（ALPHANUM_TO_KANA）
- * 4. ひらがな・全角カタカナをそのまま利用
- * 5. それ以外の未解決漢字等は除去
- * 6. 半角カタカナに変換して出力
+ * Cloudflare Worker API 連携版
  */
 
 import { toHalfWidthKana, removeSymbols } from './converter.js';
-import { applyDictionary, FURIGANA_DICT } from '../utils/furigana-dict.js';
 import { createLogger } from '../utils/logger.js';
 
 const log = createLogger('furigana');
 
+// --- Worker API設定（デプロイ後にURLを書き換えてください） ---
+const WORKER_API_URL = "https://furigana-api.ユーザー名.workers.dev/api/furigana";
+
 /* ============================================
  * 英数字→カタカナ読み マッピング
  * ============================================ */
-
 const ALPHANUM_TO_KANA = {
   'A': 'エー', 'B': 'ビー', 'C': 'シー', 'D': 'ディー', 'E': 'イー',
   'F': 'エフ', 'G': 'ジー', 'H': 'エイチ', 'I': 'アイ', 'J': 'ジェー',
@@ -45,117 +36,94 @@ const ALPHANUM_TO_KANA = {
   '５': 'ゴ', '６': 'ロク', '７': 'ナナ', '８': 'ハチ', '９': 'キュウ',
 };
 
-/* ============================================
- * 文字種別判定ヘルパー
- * ============================================ */
-
-function isHiragana(char) {
-  const code = char.charCodeAt(0);
-  return code >= 0x3041 && code <= 0x3096;
+/**
+ * 外部 Worker API を呼び出してフリガナを一括取得
+ * @param {Array<string>} names - 漢字名称の配列
+ * @returns {Promise<Object>} { 漢字: 読み } のオブジェクト
+ */
+async function fetchFuriganaFromAPI(names) {
+  try {
+    const response = await fetch(WORKER_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ names })
+    });
+    
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    
+    const data = await response.json();
+    return data.readings || {};
+  } catch (err) {
+    log.error('Worker API との通信に失敗', { error: err.message });
+    return {};
+  }
 }
-
-function isKatakana(char) {
-  const code = char.charCodeAt(0);
-  return code >= 0x30A1 && code <= 0x30FA;
-}
-
-function isKanji(char) {
-  const code = char.charCodeAt(0);
-  return (code >= 0x4E00 && code <= 0x9FFF) || (code >= 0x3400 && code <= 0x4DBF);
-}
-
-/* ============================================
- * フリガナ生成
- * ============================================ */
 
 /**
- * 名称から半角カタカナのフリガナを生成
- * @param {string} name - 名称
- * @param {Object} customDict - ユーザー辞書
- * @returns {string} 半角カタカナのフリガナ
+ * ローカルで解決可能なフリガナ（英数字・かな）を生成
  */
-export function generateFurigana(name, customDict = {}) {
-  if (!name) return '';
-
-  // 1. 記号を除去
+function generateLocalFurigana(name) {
   const cleaned = removeSymbols(name);
-
-  // 2. 辞書マッチング（一括置換。長文優先）
-  let processed = applyDictionary(cleaned, customDict);
-
-  // 3. 解決されなかった箇所を1文字ずつスキャンして処理
-  const mergedDict = { ...FURIGANA_DICT, ...customDict };
   let katakana = '';
-  
-  // 1文字ずつ走査
-  for (const char of processed) {
+  for (const char of cleaned) {
     if (ALPHANUM_TO_KANA[char]) {
-      katakana += ALPHANUM_TO_KANA[char]; // 英数字
-    } else if (isHiragana(char)) {
-      katakana += String.fromCharCode(char.charCodeAt(0) + 0x60); // ひらがな→カタカナ
-    } else if (isKatakana(char) || char === 'ー' || char === '・') {
-      katakana += char; // そのまま
-    } else if (isKanji(char)) {
-      // 漢字が残っている場合は、1文字での辞書引きを試みる
-      if (mergedDict[char]) {
-        katakana += mergedDict[char];
-      } else {
-        log.debug('未知の漢字をスキップ', { char });
-      }
+      katakana += ALPHANUM_TO_KANA[char];
+    } else if (/[\u3041-\u3096]/.test(char)) { // ひらがな
+      katakana += String.fromCharCode(char.charCodeAt(0) + 0x60);
+    } else if (/[\u30A1-\u30FAー・]/.test(char)) { // カタカナ
+      katakana += char;
+    } else {
+      katakana += char; // 漢字等はそのまま残して API に投げる
     }
   }
-
-  // 4. 半角カナに変換し、24文字制限に収める
-  return toHalfWidthKana(katakana).substring(0, 24);
+  return katakana;
 }
-
-/* ============================================
- * 一括処理
- * ============================================ */
 
 /**
  * 全データのフリガナを一括生成
- * @param {Array<Object>} data - 全行データ
- * @param {Object} spec - 機種仕様
- * @param {Object} customDict - ユーザー辞書
- * @returns {Promise<Array<Object>>} 比較用データの配列
  */
-export async function processAllFurigana(data, spec, customDict = {}) {
+export async function processAllFurigana(data, spec) {
   const result = [];
   const nameKey = spec.columns.find(col => col.key.includes('name'))?.key || 'name';
   const kanaKey = spec.columns.find(col => col.key.includes('furigana') || col.key.includes('kana'))?.key || 'furigana';
 
-  log.info('フリガナ一括生成を開始', { 
-    rows: data.length, 
-    customDictCount: Object.keys(customDict).length 
-  });
+  log.info('フリガナ一括生成を開始 (API連携モード)', { rows: data.length });
 
+  // 1. 重複を除いた漢字名称リストを作成（API節約と効率化のため）
+  const uniqueNames = [...new Set(data.map(row => row[nameKey]).filter(n => n && /[\u4E00-\u9FFF]/.test(n)))];
+  
+  // 2. API を叩いて一括取得
+  const apiReadings = uniqueNames.length > 0 ? await fetchFuriganaFromAPI(uniqueNames) : {};
+
+  // 3. 各行に適用
   data.forEach((row, index) => {
     const name = row[nameKey] || '';
     if (!name) return;
 
-    try {
-      const generated = generateFurigana(name, customDict);
-      const current = row[kanaKey] || '';
+    let processed = name;
+    // API の結果があれば置換
+    if (apiReadings[name]) {
+      processed = apiReadings[name];
+    } else {
+      // 登録がない場合はローカル変換を試みる
+      processed = generateLocalFurigana(name);
+    }
 
-      if (generated && generated !== current) {
-        result.push({
+    // 最終的に半角カナ変換 + 余計な漢字の除去
+    const generated = toHalfWidthKana(processed).replace(/[^\uFF65-\uFF9F0-9A-Z]/gi, '').substring(0, 24);
+    const current = row[kanaKey] || '';
+
+    if (generated && generated !== current) {
+      result.push({
           index,
           fieldKey: kanaKey,
           current,
           generated,
           name,
-        });
-      }
-    } catch (err) {
-      log.warn(`フリガナ生成失敗 [${index}]`, { name, error: err.message });
+      });
     }
   });
 
-  log.info('フリガナ一括生成を完了', { 
-    totalRows: data.length, 
-    changedRows: result.length,
-  });
-
+  log.info('フリガナ一括生成を完了', { totalRows: data.length, changedRows: result.length });
   return result;
 }

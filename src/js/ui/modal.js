@@ -154,48 +154,8 @@ export function showGaijiEditor(currentGaiji) {
 }
 
 /**
- * フリガナ辞書設定モーダルを表示
- * @param {string} currentDictText - 現在のユーザー辞書テキスト
- * @returns {Promise<string|null>} 保存時は新しいテキスト、キャンセル時はnull
- */
-export function showFuriganaDictEditor(currentDictText) {
-  return new Promise(resolve => {
-    const textarea = document.createElement('textarea');
-    textarea.className = 'gaiji-editor'; // スタイル流用
-    textarea.id = 'furigana-dict-textarea';
-    textarea.value = currentDictText || '';
-    textarea.placeholder = '漢字,フリガナ の形式で入力\n例:\n小鳥遊,タカナシ\n八月一日,ホズミ';
-
-    const container = document.createElement('div');
-    const desc = document.createElement('p');
-    desc.textContent = UI_TEXT.MODAL.FURIGANA_DICT_DESCRIPTION;
-    desc.style.marginBottom = '12px';
-    desc.style.color = 'var(--color-text-secondary)';
-    container.appendChild(desc);
-    container.appendChild(textarea);
-
-    const { close } = showModal({
-      title: UI_TEXT.MODAL.FURIGANA_DICT_TITLE,
-      content: container,
-      buttons: [
-        {
-          label: UI_TEXT.MODAL.BTN_CANCEL,
-          style: 'secondary',
-          onClick: () => { close(); resolve(null); },
-        },
-        {
-          label: UI_TEXT.MODAL.BTN_SAVE,
-          style: 'primary',
-          onClick: () => { close(); resolve(textarea.value); },
-        },
-      ],
-    });
-  });
-}
-
-
-/**
  * 市外局番入力モーダルを表示
+
  * @returns {Promise<string|null>} 保存時は市外局番、キャンセル時はnull
  */
 export function showCityCodeModal() {

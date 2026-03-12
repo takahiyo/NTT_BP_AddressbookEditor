@@ -22,7 +22,7 @@ import { autoAssignMemoryNos } from './services/memory-service.js';
 import { processAllPhoneNumbers } from './services/phone-processor.js';
 import { processAllFurigana } from './services/furigana-processor.js';
 import { createLogger, getLogText } from './utils/logger.js';
-import { showFuriganaDictEditor } from './ui/modal.js';
+
 
 
 const log = createLogger('app');
@@ -48,14 +48,9 @@ const state = {
   /** ツールバーボタン参照 */
   toolbarButtons: null,
   /** 外字設定（使用不可文字のSet） */
-  gaijiChars: new Set(),
-  /** 外字設定テキスト（テキストエリアの生テキスト） */
   gaijiText: '',
-  /** フリガナユーザー辞書（単語 -> 読み のMap） */
-  userDict: {},
-  /** フリガナユーザー辞書テキスト（生テキスト） */
-  userDictText: '',
   /** バリデーション結果 */
+
 
   lastValidation: null,
 };
@@ -80,8 +75,8 @@ function initApp() {
   initDragDrop();
   initFileInput();
   loadGaijiFromStorage();
-  loadUserDictFromStorage();
   updateStatusBar();
+
 
 
   /* デバッグ用: グローバルにログテキスト取得関数を公開 */
@@ -160,8 +155,8 @@ function initToolbarUI() {
     onAutoMemory: handleAutoMemory,
     onPhoneProcess: handlePhoneProcess,
     onFurigana: handleFurigana,
-    onFuriganaSettings: handleFuriganaSettings,
   });
+
 
   updateToolbarState(state.toolbarButtons, false);
 }
@@ -510,8 +505,9 @@ async function handleFurigana() {
   log.info('フリガナ生成を開始', { rows: data.length });
   showToast('フリガナを生成中...', 'info');
 
-  const results = await processAllFurigana(data, state.inputSpec, state.userDict);
+  const results = await processAllFurigana(data, state.inputSpec);
   if (results.length === 0) {
+
 
     showToast('生成が必要なフリガナ（未入力または変更あり）はありません', 'info');
     return;
@@ -615,60 +611,9 @@ function loadGaijiFromStorage() {
   }
 }
 
-/** フリガナユーザー辞書設定モーダルを開く */
-async function handleFuriganaSettings() {
-  const result = await showFuriganaDictEditor(state.userDictText);
-  if (result !== null) {
-    state.userDictText = result;
-    state.userDict = parseUserDictText(result);
-    saveUserDictToStorage();
-    log.info('フリガナ辞書を更新', { pairCount: Object.keys(state.userDict).length });
-    showToast(UI_TEXT.TOAST.FURIGANA_DICT_SAVED, 'success');
-  }
-}
-
-/** ユーザー辞書テキストをオブジェクトに変換 */
-function parseUserDictText(text) {
-  const dict = {};
-  if (!text) return dict;
-  text.split('\n').forEach(line => {
-    const parts = line.split(/[,,]/); // カンマまたは読点で分割
-    if (parts.length >= 2) {
-      const key = parts[0].trim();
-      const val = parts[1].trim();
-      if (key && val) {
-        dict[key] = val;
-      }
-    }
-  });
-  return dict;
-}
-
-/** localStorageにユーザー辞書を保存 */
-function saveUserDictToStorage() {
-  try {
-    localStorage.setItem('user_furigana_dict', state.userDictText);
-  } catch (e) {
-    log.warn('フリガナ辞書の保存に失敗', { error: e.message });
-  }
-}
-
-/** localStorageからユーザー辞書を読み込み */
-function loadUserDictFromStorage() {
-  try {
-    const text = localStorage.getItem('user_furigana_dict');
-    if (text) {
-      state.userDictText = text;
-      state.userDict = parseUserDictText(text);
-      log.debug('フリガナ辞書を読み込み', { pairCount: Object.keys(state.userDict).length });
-    }
-  } catch (e) {
-    log.warn('フリガナ辞書の読み込みに失敗', { error: e.message });
-  }
-}
-
 /* ============================================
  * ステータスバー更新
+
 
  * ============================================ */
 
