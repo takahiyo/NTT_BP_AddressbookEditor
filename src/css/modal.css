@@ -1,0 +1,143 @@
+/* ============================================
+ * モーダルダイアログ
+ * 外字設定、確認ダイアログ等
+ * ============================================ */
+
+/* === オーバーレイ === */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-base), visibility var(--transition-base);
+}
+
+.modal-overlay.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* === モーダル本体 === */
+.modal {
+  background: var(--color-bg-secondary);
+  border: var(--border-width) solid var(--color-glass-border);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(20px) scale(0.95);
+  transition: transform var(--transition-base);
+}
+
+.modal-overlay.is-active .modal {
+  transform: translateY(0) scale(1);
+}
+
+/* ヘッダー */
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: var(--border-width) solid var(--color-glass-border);
+}
+
+.modal__title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.modal__close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: background var(--transition-fast);
+}
+
+.modal__close:hover {
+  background: var(--color-glass-bg);
+}
+
+/* コンテンツ */
+.modal__body {
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* フッター */
+.modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-top: var(--border-width) solid var(--color-glass-border);
+}
+
+/* === 外字設定用テキストエリア === */
+.gaiji-editor {
+  width: 100%;
+  min-height: 200px;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  line-height: 1.8;
+  resize: vertical;
+  background: var(--color-bg-primary);
+  border: var(--border-width) solid var(--color-glass-border);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-md);
+  color: var(--color-text-primary);
+}
+
+/* === モーダル内テーブル（フリガナ確認用等） === */
+
+.modal-table-wrapper {
+  max-height: 400px;
+  overflow-y: auto;
+  border: var(--border-width) solid var(--color-glass-border);
+  border-radius: var(--border-radius-sm);
+  background: var(--color-bg-primary);
+}
+
+.modal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.modal-table th,
+.modal-table td {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: var(--border-width) solid var(--color-glass-border);
+  text-align: left;
+}
+
+.modal-table th {
+  position: sticky;
+  top: 0;
+  background: var(--color-bg-secondary);
+  font-weight: 600;
+  z-index: 1;
+}
+
+.modal-table td.cell-generated {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.modal-table tr:hover {
+  background: var(--color-glass-bg);
+}

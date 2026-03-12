@@ -1,0 +1,206 @@
+/* ============================================
+ * テーブルエディタ
+ * メインの電話帳データ編集テーブル
+ * ============================================ */
+
+/* === テーブルコンテナ === */
+.table-container {
+  flex: 1;
+  overflow: auto;
+  border: var(--border-width) solid var(--color-glass-border);
+  border-radius: var(--border-radius-md);
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(8px);
+  position: relative;
+}
+
+/* 空状態のプレースホルダー */
+.table-container__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 300px;
+  gap: var(--spacing-md);
+  color: var(--color-text-muted);
+}
+
+.table-container__empty-icon {
+  font-size: 3rem;
+  opacity: 0.5;
+}
+
+.table-container__empty-text {
+  font-size: var(--font-size-lg);
+}
+
+.table-container__empty-hint {
+  font-size: var(--font-size-sm);
+}
+
+/* === テーブル本体 === */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* === テーブルヘッダー === */
+.data-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.data-table th {
+  padding: var(--spacing-sm) var(--spacing-sm);
+  background: var(--table-header-bg);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-align: center; /* 中央寄せに変更 */
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid var(--color-accent-primary);
+  white-space: normal; /* 折り返しを許可 */
+  word-break: break-all;
+  vertical-align: top; /* 上端揃え */
+  user-select: none;
+  min-height: 48px;
+}
+
+.data-table th .col-selector {
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.data-table th .col-label {
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.data-table th .col-label:hover {
+  text-decoration: underline;
+  color: var(--color-accent-primary);
+}
+
+.data-table th .sort-icon {
+  font-size: 10px;
+  vertical-align: middle;
+}
+
+/* 行番号列 */
+.data-table th.col-rownum,
+.data-table td.col-rownum {
+  width: 50px;
+  min-width: 50px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+}
+
+/* === テーブルセル === */
+.data-table td {
+  padding: 2px 4px;
+  border-bottom: var(--border-width) solid var(--table-border-color);
+  border-right: var(--border-width) solid var(--table-border-color);
+  vertical-align: middle;
+  transition: background-color var(--transition-fast);
+}
+
+/* 偶数行の背景 */
+.data-table tbody tr:nth-child(even) {
+  background: var(--table-row-alt);
+}
+
+/* ホバー */
+.data-table tbody tr:hover {
+  background: var(--table-row-hover);
+}
+
+/* === セル内入力フィールド === */
+.data-table .cell-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 3px 4px;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-mono);
+  color: var(--color-text-primary);
+  border-radius: 3px;
+  transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.data-table .cell-input:focus {
+  background: rgba(108, 138, 255, 0.08);
+  box-shadow: inset 0 0 0 1px var(--color-accent-primary);
+}
+
+/* === バリデーション状態 === */
+
+/* 文字数超過（エラー） */
+.cell--error {
+  background-color: var(--color-error-bg) !important;
+}
+
+.cell--error .cell-input {
+  color: var(--color-error);
+}
+
+/* 警告（非対応文字等） */
+.cell--warning {
+  background-color: var(--color-warning-bg) !important;
+}
+
+.cell--warning .cell-input {
+  color: var(--color-warning);
+}
+
+/* 空行警告（電話番号なし） */
+tr.row--empty-phone {
+  background-color: rgba(251, 191, 36, 0.06) !important;
+}
+
+tr.row--empty-phone td.col-rownum {
+  color: var(--color-warning);
+}
+
+/* === バイトカウント表示 === */
+.cell-byte-count {
+  position: absolute;
+  bottom: 1px;
+  right: 4px;
+  font-size: 9px;
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+td:focus-within .cell-byte-count {
+  opacity: 1;
+}
+
+.cell-byte-count--over {
+  color: var(--color-error);
+  font-weight: 700;
+  opacity: 1;
+}
+
+/* === テーブルカラム幅 === */
+.col-ten { width: 50px; }
+.col-memory { width: 70px; }
+.col-name { width: 160px; }
+.col-furigana { width: 140px; }
+.col-group { width: 60px; }
+.col-phone { width: 180px; }
+.col-icon { width: 65px; }
+.col-dial-attr { width: 65px; }
+
+/* セルのポジション（バイトカウント表示用） */
+.data-table td {
+  position: relative;
+}

@@ -1,0 +1,95 @@
+/* ============================================
+ * ベーススタイル
+ * リセットと共通スタイル定義
+ * ============================================ */
+
+/* === リセット === */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+  /* 背景グラデーション */
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(108, 138, 255, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(56, 189, 248, 0.03) 0%, transparent 50%);
+}
+
+/* === 共通ユーティリティ === */
+a {
+  color: var(--color-accent-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-accent-primary-hover);
+}
+
+button {
+  font-family: var(--font-family);
+  cursor: pointer;
+  border: none;
+  outline: none;
+  background: none;
+  color: inherit;
+  font-size: inherit;
+}
+
+input, select, textarea {
+  font-family: var(--font-family);
+  font-size: inherit;
+  color: var(--color-text-primary);
+  background: var(--color-bg-secondary);
+  border: var(--border-width) solid var(--color-glass-border);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--color-accent-primary);
+  box-shadow: 0 0 0 2px rgba(108, 138, 255, 0.2);
+}
+
+/* === スクロールバー === */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-text-muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* === 選択範囲 === */
+::selection {
+  background: rgba(108, 138, 255, 0.3);
+  color: var(--color-text-primary);
+}
