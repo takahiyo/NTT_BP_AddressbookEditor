@@ -101,9 +101,9 @@
   padding: var(--spacing-md);
   color: var(--color-text-primary);
 }
-}
 
 /* === モーダル内テーブル（フリガナ確認用等） === */
+
 .modal-table-wrapper {
   max-height: 400px;
   overflow-y: auto;

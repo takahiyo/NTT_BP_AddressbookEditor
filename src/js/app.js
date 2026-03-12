@@ -21,6 +21,9 @@ import { confirmDialog, showGaijiEditor, showCityCodeModal, showFuriganaReviewMo
 import { autoAssignMemoryNos } from './services/memory-service.js';
 import { processAllPhoneNumbers } from './services/phone-processor.js';
 import { processAllFurigana } from './services/furigana-processor.js';
+import { createLogger, getLogText } from './utils/logger.js';
+
+const log = createLogger('app');
 
 /* ============================================
  * アプリ状態
@@ -60,16 +63,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /** アプリケーションの初期化 */
 function initApp() {
+  log.info('アプリケーション初期化を開始');
   initSpecs();
   initToolbarUI();
   initTableEditor();
-  initTheme(); // テーマ初期化
+  initTheme();
 
   /* ファイル関係のイベント登録 */
   initDragDrop();
   initFileInput();
   loadGaijiFromStorage();
   updateStatusBar();
+
+  /* デバッグ用: グローバルにログテキスト取得関数を公開 */
+  window.__getAppLog = getLogText;
+
+  log.info('アプリケーション初期化を完了', { spec: state.inputSpec?.id });
 }
 
 /** 機種セレクターの初期化 */
@@ -87,6 +96,7 @@ function initSpecs() {
   /* デフォルト機種を設定 */
   state.inputSpec = getSpec(APP_CONFIG.DEFAULT_SPEC_ID);
   state.outputSpec = getSpec(APP_CONFIG.DEFAULT_SPEC_ID);
+  log.debug('機種仕様を設定', { input: state.inputSpec?.id, output: state.outputSpec?.id });
 
   /* 桁数モードのオプションを生成 */
   if (state.inputSpec?.digitModes) {
@@ -99,6 +109,7 @@ function initSpecs() {
   /* 変更イベント */
   inputSelect.addEventListener('change', () => {
     state.inputSpec = getSpec(inputSelect.value);
+    log.info('入力機種を変更', { specId: state.inputSpec?.id });
     state.tableEditor.setSpec(state.inputSpec);
     runValidation();
     updateStatusBar();
@@ -106,10 +117,12 @@ function initSpecs() {
 
   outputSelect.addEventListener('change', () => {
     state.outputSpec = getSpec(outputSelect.value);
+    log.info('出力機種を変更', { specId: state.outputSpec?.id });
   });
 
   digitSelect.addEventListener('change', () => {
     state.digitMode = digitSelect.value;
+    log.info('桁数モードを変更', { mode: state.digitMode });
   });
 }
 
@@ -198,6 +211,7 @@ function handleImport() {
  * @param {File} file - CSVファイル
  */
 async function loadFile(file) {
+  log.info('ファイル読み込み開始', { name: file.name, size: file.size });
   try {
     const { header, rows, encoding } = await parseCSVFile(file);
     state.csvHeader = header;
@@ -210,9 +224,10 @@ async function loadFile(file) {
     runValidation();
     updateStatusBar();
 
+    log.info('ファイル読み込み完了', { rows: data.length, encoding, columns: header.length });
     showToast(formatText(UI_TEXT.TOAST.IMPORT_SUCCESS, { count: data.length }), 'success');
   } catch (err) {
-    console.error('[app] CSV読込エラー:', err);
+    log.error('CSV読込エラー', { error: err.message, stack: err.stack });
     showToast(formatText(UI_TEXT.TOAST.IMPORT_ERROR, { message: err.message }), 'error');
   }
 }
@@ -224,6 +239,8 @@ function handleExport() {
     showToast(UI_TEXT.TOAST.NO_DATA, 'error');
     return;
   }
+
+  log.info('CSV書出開始', { rows: data.length });
 
   /* 出力機種のカラム構成でCSVを生成 */
   let exportData = data;
@@ -245,6 +262,7 @@ function handleExport() {
   const filename = generateFilename(exportSpec.name);
   downloadCSV(csvText, exportSpec.encoding, filename);
 
+  log.info('CSV書出完了', { filename, encoding: exportSpec.encoding });
   showToast(UI_TEXT.TOAST.EXPORT_SUCCESS, 'success');
 }
 
@@ -254,6 +272,7 @@ function handleExport() {
 
 function handleAddRow() {
   state.tableEditor.addRow();
+  log.debug('行を追加');
   updateStatusBar();
 }
 
@@ -268,6 +287,7 @@ async function handleDeleteRow() {
   );
   if (ok) {
     state.tableEditor.deleteSelectedRows();
+    log.info('行を削除', { count: selected.length });
     runValidation();
     updateStatusBar();
   }
@@ -280,6 +300,7 @@ async function handleDeleteRow() {
 function handleValidate() {
   runValidation();
   const v = state.lastValidation;
+  log.info('バリデーション完了', { errors: v.errorCount, warnings: v.warningCount });
   showToast(
     formatText(UI_TEXT.TOAST.VALIDATION_COMPLETE, { errors: v.errorCount, warnings: v.warningCount }),
     v.errorCount > 0 ? 'error' : 'success'
@@ -332,6 +353,7 @@ function handleToHalf() {
 
   state.tableEditor.updateData(newData);
   runValidation();
+  log.info('半角変換完了', { columns: selectedCols, changed: count });
   showToast(formatText(UI_TEXT.TOAST.CONVERT_COMPLETE, { count }), 'success');
 }
 
@@ -358,6 +380,7 @@ function handleToFull() {
 
   state.tableEditor.updateData(newData);
   runValidation();
+  log.info('全角変換完了', { columns: selectedCols, changed: count });
   showToast(formatText(UI_TEXT.TOAST.CONVERT_COMPLETE, { count }), 'success');
 }
 
@@ -384,6 +407,7 @@ function handleRemoveSymbols() {
 
   state.tableEditor.updateData(newData);
   runValidation();
+  log.info('記号削除完了', { columns: selectedCols, changed: count });
   showToast(formatText(UI_TEXT.TOAST.CONVERT_COMPLETE, { count }), 'success');
 }
 
@@ -407,6 +431,7 @@ async function handleTruncate() {
 
   state.tableEditor.updateData(data);
   runValidation();
+  log.info('超過カット完了', { count: totalCount });
   showToast(formatText(UI_TEXT.TOAST.TRUNCATE_COMPLETE, { count: totalCount }), 'success');
 }
 
@@ -423,6 +448,7 @@ async function handleDeleteEmpty() {
   state.tableEditor.updateData(result.data);
   runValidation();
   updateStatusBar();
+  log.info('空行削除完了', { deleted: result.deletedCount });
   showToast(formatText(UI_TEXT.TOAST.EMPTY_ROWS_DELETED, { count: result.deletedCount }), 'success');
 }
 
@@ -439,6 +465,7 @@ function handleAutoMemory() {
 
   state.tableEditor.updateData(result.data);
   runValidation();
+  log.info('メモリ番号採番完了', { assigned: result.assignedCount });
   showToast(`メモリ番号を ${result.assignedCount} 件 採番しました`, 'success');
 }
 
@@ -450,11 +477,13 @@ async function handlePhoneProcess() {
   const cityCode = await showCityCodeModal();
   if (cityCode === null) return;
 
+  log.info('電話番号加工を開始', { cityCode });
   const result = processAllPhoneNumbers(data, state.inputSpec.phoneNumberSlots, cityCode);
   
   state.tableEditor.updateData(result.data);
   runValidation();
   
+  log.info('電話番号加工を完了', { processed: result.processedCount, errors: result.errorCount });
   if (result.errorCount > 0) {
     showToast(`加工完了（${result.processedCount}件）。桁数が異常な番号が ${result.errorCount} 件あります`, 'warning');
   } else {
@@ -467,14 +496,21 @@ async function handleFurigana() {
   const data = state.tableEditor.getData();
   if (!data || data.length === 0) return;
 
-  const results = processAllFurigana(data, state.inputSpec);
+  log.info('フリガナ生成を開始', { rows: data.length });
+  showToast('フリガナを生成中...', 'info');
+
+  const results = await processAllFurigana(data, state.inputSpec);
   if (results.length === 0) {
     showToast('生成が必要なフリガナ（未入力または変更あり）はありません', 'info');
     return;
   }
 
+  log.info('フリガナ生成完了、レビューモーダルを表示', { candidates: results.length });
   const selectedResults = await showFuriganaReviewModal(results);
-  if (!selectedResults || selectedResults.length === 0) return;
+  if (!selectedResults || selectedResults.length === 0) {
+    log.info('フリガナ反映をキャンセル');
+    return;
+  }
 
   const newData = [...data];
   selectedResults.forEach(item => {
@@ -486,6 +522,7 @@ async function handleFurigana() {
 
   state.tableEditor.updateData(newData);
   runValidation();
+  log.info('フリガナ反映完了', { applied: selectedResults.length });
   showToast(`${selectedResults.length} 件のフリガナを更新しました`, 'success');
 }
 
@@ -519,6 +556,7 @@ async function handleGaijiSettings() {
     state.gaijiChars = parseGaijiText(result);
     saveGaijiToStorage();
     runValidation();
+    log.info('外字設定を更新', { charCount: state.gaijiChars.size });
     showToast(UI_TEXT.TOAST.GAIJI_SAVED, 'success');
   }
 }
@@ -546,7 +584,7 @@ function saveGaijiToStorage() {
     const key = `gaiji_${state.inputSpec?.id || 'default'}`;
     localStorage.setItem(key, state.gaijiText);
   } catch (e) {
-    console.warn('[app] 外字設定の保存に失敗:', e);
+    log.warn('外字設定の保存に失敗', { error: e.message });
   }
 }
 
@@ -558,9 +596,10 @@ function loadGaijiFromStorage() {
     if (text) {
       state.gaijiText = text;
       state.gaijiChars = parseGaijiText(text);
+      log.debug('外字設定を読み込み', { charCount: state.gaijiChars.size });
     }
   } catch (e) {
-    console.warn('[app] 外字設定の読み込みに失敗:', e);
+    log.warn('外字設定の読み込みに失敗', { error: e.message });
   }
 }
 
