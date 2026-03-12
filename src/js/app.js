@@ -503,13 +503,11 @@ async function handleFurigana() {
   if (!data || data.length === 0) return;
 
   log.info('フリガナ生成を開始', { rows: data.length });
-  showToast('フリガナを生成中...', 'info');
+  showToast(UI_TEXT.TOOLBAR.GENERATE_FURIGANA + '中...', 'info');
 
   const results = await processAllFurigana(data, state.inputSpec);
   if (results.length === 0) {
-
-
-    showToast('生成が必要なフリガナ（未入力または変更あり）はありません', 'info');
+    showToast('生成可能なフリガナはありません', 'info');
     return;
   }
 
@@ -531,7 +529,7 @@ async function handleFurigana() {
   state.tableEditor.updateData(newData);
   runValidation();
   log.info('フリガナ反映完了', { applied: selectedResults.length });
-  showToast(`${selectedResults.length} 件のフリガナを更新しました`, 'success');
+  showToast(formatText(UI_TEXT.TOAST.CONVERT_COMPLETE, { count: selectedResults.length }), 'success');
 }
 
 /* ============================================

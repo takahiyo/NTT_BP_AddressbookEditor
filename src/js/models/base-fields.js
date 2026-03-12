@@ -83,33 +83,55 @@ export function createPhoneFieldSet(slotNumber) {
 }
 
 /**
- * 基本フィールド群＋電話番号スロットを組み合わせてカラム定義配列を生成
- * @param {Object} overrides - フィールドごとの上書き値 { fieldKey: { maxBytes: N, ... } }
- * @param {number} phoneSlots - 電話番号スロット数
- * @returns {Array} カラム定義配列（CSV列順）
+ * フィールド定義から機種仕様（スペック）の大部分を自動生成する
+ * @param {Object} partialSpec - 機種固有の基本設定 (id, name, family 等)
+ * @param {Array} items - フィールドの配列定義 (key, overrides 等)
+ * @returns {Object} 完成した機種仕様オブジェクト
  */
-export function buildColumns(overrides = {}, phoneSlots = 4) {
-  /* 基本5フィールド */
-  const baseKeys = ['ten', 'memoryNo', 'name', 'furigana', 'groupNo'];
-  const columns = baseKeys.map(key => {
-    const base = { ...BASE_FIELDS[key] };
-    if (overrides[key]) {
-      Object.assign(base, overrides[key]);
+export function defineSpec(partialSpec, items) {
+  const columns = [];
+  const fieldConstraints = {};
+  const uiFields = [];
+
+  items.forEach(item => {
+    /* BASE_FIELDS から基本設定を取得 */
+    const base = { ...BASE_FIELDS[item.key] };
+    if (!base.key) {
+      /* 基底にない場合は新規作成（またはエラー） */
+      base.key = item.key;
+      base.label = item.label || item.key;
     }
-    return base;
+
+    /* 機種固有の上書きを適用 */
+    const finalField = { ...base, ...item };
+
+    /* 1. CSVカラム定義に追加 */
+    columns.push({
+      key: finalField.key,
+      label: finalField.label,
+    });
+
+    /* 2. 制約（バリデーション）に追加 */
+    if (finalField.constraints) {
+      fieldConstraints[finalField.key] = finalField.constraints;
+    }
+
+    /* 3. UIフィールド定義に追加 (editable等を含む) */
+    uiFields.push({
+      key: finalField.key,
+      label: finalField.label,
+      type: finalField.type || 'text',
+      width: finalField.width || 'col-default',
+      editable: finalField.editable !== false,
+      cssClass: finalField.cssClass || '',
+    });
   });
 
-  /* 電話番号スロットを追加 */
-  for (let i = 1; i <= phoneSlots; i++) {
-    const phoneFields = createPhoneFieldSet(i);
-    phoneFields.forEach(field => {
-      /* phone1, icon1 等のキーで上書きを適用 */
-      if (overrides[field.key]) {
-        Object.assign(field, overrides[field.key]);
-      }
-      columns.push(field);
-    });
-  }
-
-  return columns;
+  return {
+    ...partialSpec,
+    columns,
+    fieldConstraints,
+    fields: uiFields,
+  };
 }
+

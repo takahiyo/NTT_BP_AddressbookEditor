@@ -95,7 +95,7 @@ export function showModal(options) {
 export function confirmDialog(message) {
   return new Promise(resolve => {
     const { close } = showModal({
-      title: '確認',
+      title: UI_TEXT.MODAL.CONFIRM_TITLE,
       content: `<p>${message}</p>`,
       buttons: [
         {
@@ -104,7 +104,7 @@ export function confirmDialog(message) {
           onClick: () => { close(); resolve(false); },
         },
         {
-          label: 'OK',
+          label: UI_TEXT.MODAL.BTN_OK,
           style: 'primary',
           onClick: () => { close(); resolve(true); },
         },
@@ -169,14 +169,14 @@ export function showCityCodeModal() {
 
     const container = document.createElement('div');
     const desc = document.createElement('p');
-    desc.textContent = '市外局番を指定してください（AB-J変換用）';
+    desc.textContent = UI_TEXT.MODAL.CITY_CODE_DESC;
     desc.style.marginBottom = '12px';
     desc.style.color = 'var(--color-text-secondary)';
     container.appendChild(desc);
     container.appendChild(input);
 
     const { close } = showModal({
-      title: '市外局番設定',
+      title: UI_TEXT.MODAL.CITY_CODE_TITLE,
       content: container,
       buttons: [
         {
@@ -185,7 +185,7 @@ export function showCityCodeModal() {
           onClick: () => { close(); resolve(null); },
         },
         {
-          label: '変換実行',
+          label: UI_TEXT.MODAL.BTN_EXECUTE_CONVERT,
           style: 'primary',
           onClick: () => { close(); resolve(input.value); },
         },

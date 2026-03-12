@@ -65,11 +65,15 @@ export const UI_TEXT = {
 
   /* === モーダル === */
   MODAL: {
-    GAIJI_TITLE: '外字設定',
-    GAIJI_DESCRIPTION: '使用不可文字を1行1文字で入力してください',
-    BTN_SAVE: '保存',
     BTN_CANCEL: 'キャンセル',
     BTN_CLOSE: '✕',
+    BTN_OK: 'OK',
+    CONFIRM_TITLE: '確認',
+    GAIJI_TITLE: '外字設定',
+    GAIJI_DESCRIPTION: '使用不可文字を1行1文字で入力してください',
+    CITY_CODE_TITLE: '市外局番設定',
+    CITY_CODE_DESC: '市外局番を指定してください（AB-J変換用）',
+    BTN_EXECUTE_CONVERT: '変換実行',
 
 
     CONFIRM_DELETE: '選択した{count}行を削除してよろしいですか？',
