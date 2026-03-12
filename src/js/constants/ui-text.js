@@ -38,7 +38,9 @@ export const UI_TEXT = {
     AUTO_ASSIGN_MEMORY: 'メモリ採番',
     PHONE_PROCESS: '電話番号加工',
     GENERATE_FURIGANA: 'フリガナ生成',
+    FURIGANA_DICT: 'フリガナ辞書',
   },
+
 
   /* === テーブル === */
   TABLE: {
@@ -68,6 +70,9 @@ export const UI_TEXT = {
     BTN_SAVE: '保存',
     BTN_CANCEL: 'キャンセル',
     BTN_CLOSE: '✕',
+    FURIGANA_DICT_TITLE: 'フリガナ辞書',
+    FURIGANA_DICT_DESCRIPTION: '「漢字,フリガナ」の形式で入力してください（例: 小鳥遊,タカナシ）',
+
     CONFIRM_DELETE: '選択した{count}行を削除してよろしいですか？',
     CONFIRM_TRUNCATE: '超過文字を一括カットします。よろしいですか？',
     FURIGANA_REVIEW_TITLE: 'フリガナ生成の確認',
@@ -88,7 +93,9 @@ export const UI_TEXT = {
     TRUNCATE_COMPLETE: '超過カット完了（{count}セル）',
     EMPTY_ROWS_DELETED: '空行を{count}件削除しました',
     GAIJI_SAVED: '外字設定を保存しました',
+    FURIGANA_DICT_SAVED: 'フリガナ辞書を保存しました',
     NO_DATA: 'データがありません',
+
   },
 
   /* === エラーメッセージ === */

@@ -102,6 +102,8 @@ export function initToolbar(container, handlers) {
   const autoProcDrop = createDropdown(UI_TEXT.TOOLBAR.CATEGORIES.AUTO_PROC, '🪄');
   autoProcDrop.menu.appendChild(createButton('btn-phone-proc', UI_TEXT.TOOLBAR.PHONE_PROCESS, '📞', 'secondary', handlers.onPhoneProcess));
   autoProcDrop.menu.appendChild(createButton('btn-furigana', UI_TEXT.TOOLBAR.GENERATE_FURIGANA, '📛', 'secondary', handlers.onFurigana));
+  autoProcDrop.menu.appendChild(createButton('btn-furigana-dict', UI_TEXT.TOOLBAR.FURIGANA_DICT, '📖', 'secondary', handlers.onFuriganaSettings));
+
 
   /* === 全体 === */
   const generalDrop = createDropdown(UI_TEXT.TOOLBAR.CATEGORIES.GENERAL, '⚙️');

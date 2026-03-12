@@ -4,15 +4,17 @@
  *
  * 処理フロー:
  * 1. 名称から記号を除去
- * 2. 独自のかな辞書（FURIGANA_DICT）で頻出漢字をカタカナ読みに置換
+ * 2. ユーザー辞書 + 内蔵辞書（FURIGANA_DICT）でマッチング
+ *    - まずは最長一致（氏名まるごと、または苗字のみ等）を試行
+ *    - 未解決の漢字がある場合、1文字ずつに分解して再試行
  * 3. 英数字をカタカナ読みに変換（ALPHANUM_TO_KANA）
  * 4. ひらがな・全角カタカナをそのまま利用
- * 5. それ以外の未解決漢字等はフォールバックとして除去
+ * 5. それ以外の未解決漢字等は除去
  * 6. 半角カタカナに変換して出力
  */
 
 import { toHalfWidthKana, removeSymbols } from './converter.js';
-import { applyDictionary } from '../utils/furigana-dict.js';
+import { applyDictionary, FURIGANA_DICT } from '../utils/furigana-dict.js';
 import { createLogger } from '../utils/logger.js';
 
 const log = createLogger('furigana');
@@ -54,7 +56,12 @@ function isHiragana(char) {
 
 function isKatakana(char) {
   const code = char.charCodeAt(0);
-  return code >= 0x30A1 && code <= 0x30FA; // ヺまで
+  return code >= 0x30A1 && code <= 0x30FA;
+}
+
+function isKanji(char) {
+  const code = char.charCodeAt(0);
+  return (code >= 0x4E00 && code <= 0x9FFF) || (code >= 0x3400 && code <= 0x4DBF);
 }
 
 /* ============================================
@@ -62,42 +69,43 @@ function isKatakana(char) {
  * ============================================ */
 
 /**
- * ひらがなをカタカナに変換
- */
-function hiraganaToKatakana(str) {
-  return str.replace(/[\u3041-\u3096]/g, match =>
-    String.fromCharCode(match.charCodeAt(0) + 0x60)
-  );
-}
-
-/**
  * 名称から半角カタカナのフリガナを生成
  * @param {string} name - 名称
+ * @param {Object} customDict - ユーザー辞書
  * @returns {string} 半角カタカナのフリガナ
  */
-export function generateFurigana(name) {
+export function generateFurigana(name, customDict = {}) {
   if (!name) return '';
 
   // 1. 記号を除去
   const cleaned = removeSymbols(name);
 
-  // 2. 辞書マッチングで頻出漢字（苗字・法人名など）をカタカナ読みに置換
-  const dictApplied = applyDictionary(cleaned);
+  // 2. 辞書マッチング（一括置換。長文優先）
+  let processed = applyDictionary(cleaned, customDict);
 
-  // 3. 1文字ずつ判定して結合
+  // 3. 解決されなかった箇所を1文字ずつスキャンして処理
+  const mergedDict = { ...FURIGANA_DICT, ...customDict };
   let katakana = '';
-  for (const char of dictApplied) {
+  
+  // 1文字ずつ走査
+  for (const char of processed) {
     if (ALPHANUM_TO_KANA[char]) {
       katakana += ALPHANUM_TO_KANA[char]; // 英数字
     } else if (isHiragana(char)) {
       katakana += String.fromCharCode(char.charCodeAt(0) + 0x60); // ひらがな→カタカナ
     } else if (isKatakana(char) || char === 'ー' || char === '・') {
-      katakana += char; // カタカナや長音記号はそのまま
+      katakana += char; // そのまま
+    } else if (isKanji(char)) {
+      // 漢字が残っている場合は、1文字での辞書引きを試みる
+      if (mergedDict[char]) {
+        katakana += mergedDict[char];
+      } else {
+        log.debug('未知の漢字をスキップ', { char });
+      }
     }
-    // 未解決の漢字等はスキップ（除去）される
   }
 
-  // 4. 半角カナに変換し、一般的な24文字制限に収める
+  // 4. 半角カナに変換し、24文字制限に収める
   return toHalfWidthKana(katakana).substring(0, 24);
 }
 
@@ -109,22 +117,25 @@ export function generateFurigana(name) {
  * 全データのフリガナを一括生成
  * @param {Array<Object>} data - 全行データ
  * @param {Object} spec - 機種仕様
+ * @param {Object} customDict - ユーザー辞書
  * @returns {Promise<Array<Object>>} 比較用データの配列
  */
-export async function processAllFurigana(data, spec) {
+export async function processAllFurigana(data, spec, customDict = {}) {
   const result = [];
   const nameKey = spec.columns.find(col => col.key.includes('name'))?.key || 'name';
   const kanaKey = spec.columns.find(col => col.key.includes('furigana') || col.key.includes('kana'))?.key || 'furigana';
 
-  log.info('フリガナ一括生成を開始', { rows: data.length, nameKey, kanaKey });
+  log.info('フリガナ一括生成を開始', { 
+    rows: data.length, 
+    customDictCount: Object.keys(customDict).length 
+  });
 
-  // 同期的に全行処理可能になった
   data.forEach((row, index) => {
     const name = row[nameKey] || '';
     if (!name) return;
 
     try {
-      const generated = generateFurigana(name);
+      const generated = generateFurigana(name, customDict);
       const current = row[kanaKey] || '';
 
       if (generated && generated !== current) {
