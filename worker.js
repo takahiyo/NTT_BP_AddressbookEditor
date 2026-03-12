@@ -123,8 +123,19 @@ function corsHeaders(requestOrigin) {
     "https://dev.ntt-bp-addressbookeditor.pages.dev"
   ];
   
-  // マッチすればそのOriginを返し、しなければ本番URLを返す
-  const origin = allowedOrigins.includes(requestOrigin) ? requestOrigin : allowedOrigins[0];
+  // 完全一致または前方一致で確認（末尾スラッシュ等の差異を吸収）
+  let origin = allowedOrigins[0]; // デフォルトは本番
+  
+  if (requestOrigin) {
+    // requestOrigin を小文字化して比較
+    const originLower = requestOrigin.toLowerCase();
+    const matched = allowedOrigins.find(allowed => 
+      originLower === allowed || originLower.startsWith(allowed)
+    );
+    if (matched) {
+      origin = requestOrigin; // クライアントが送ってきたそのままの文字を返すのがベスト
+    }
+  }
 
   return {
     "Access-Control-Allow-Origin": origin,
