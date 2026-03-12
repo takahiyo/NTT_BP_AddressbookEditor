@@ -9,7 +9,7 @@ import { createLogger } from '../utils/logger.js';
 const log = createLogger('furigana');
 
 // --- Worker API設定（デプロイ後にURLを書き換えてください） ---
-const WORKER_API_URL = "https://furigana-api.ユーザー名.workers.dev/api/furigana";
+const WORKER_API_URL = "https://furigana-api.taka-hiyo.workers.dev/api/furigana";
 
 /* ============================================
  * 英数字→カタカナ読み マッピング
