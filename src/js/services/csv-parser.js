@@ -90,12 +90,13 @@ export function parseCSVText(text, delimiter = ',') {
 
 /**
  * ファイルからCSVデータを読み込む
- * エンコーディング自動判定 → パース → ヘッダー行分離
+ * エンコーディング自動判定 → パース → ヘッダー行分離/生成
  * @param {File} file - 読み込むファイルオブジェクト
+ * @param {Object} spec - 現在の機種仕様
  * @param {string} delimiter - 区切り文字（デフォルト: ','）
  * @returns {Promise<{header: Array<string>, rows: Array<Array<string>>, encoding: string}>}
  */
-export async function parseCSVFile(file, delimiter = ',') {
+export async function parseCSVFile(file, spec, delimiter = ',') {
   /* ファイルをArrayBufferとして読み込み */
   const buffer = await file.arrayBuffer();
   const bytes = new Uint8Array(buffer);
@@ -113,11 +114,31 @@ export async function parseCSVFile(file, delimiter = ',') {
     return { header: [], rows: [], encoding };
   }
 
-  /* 1行目をヘッダーとして分離 */
-  const header = allRows[0];
-  const rows = allRows.slice(1);
+  /* 列数の簡易チェック (データ行の先頭最大3行) */
+  if (spec.expectedColumns) {
+    const rowsToCheck = Math.min(3, allRows.length);
+    for (let i = 0; i < rowsToCheck; i++) {
+        // hasHeader: true の場合は2行目(index: 1)からチェックすべきだが、
+        // ZX2SMは17列、A1も17列なのでヘッダー行を含めて一旦チェック可能。
+        // spec.expectedColumns と一致するかどうか。
+        // ※空行はすでにparseCSVTextで除外されている
+        if (allRows[i].length !== spec.expectedColumns) {
+            throw new Error(`CSVの列数が不正です。選択された機種（${spec.name}）は ${spec.expectedColumns} 列を想定していますが、ファイルには ${allRows[i].length} 列が含まれています。`);
+        }
+    }
+  }
 
-  return { header, rows, encoding };
+  if (spec.hasHeader === false) {
+    /* ヘッダー行がない場合、機種仕様から仮想ヘッダーを生成し、全行をデータとして扱う */
+    const header = spec.columns.map(col => col.label);
+    const rows = allRows;
+    return { header, rows, encoding };
+  } else {
+    /* 1行目をヘッダーとして分離（デフォルト） */
+    const header = allRows[0];
+    const rows = allRows.slice(1);
+    return { header, rows, encoding };
+  }
 }
 
 /**

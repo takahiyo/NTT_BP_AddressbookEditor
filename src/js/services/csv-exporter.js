@@ -11,27 +11,36 @@ import { APP_CONFIG } from '../constants/app-config.js';
  * @param {Array<string>} header - ヘッダー行
  * @param {Array<Array<string>>} rows - データ行の2次元配列
  * @param {string} delimiter - 区切り文字
+ * @param {Object} spec - 出力機種仕様
  * @returns {string} CSV文字列
  */
-export function buildCSVText(header, rows, delimiter = ',') {
+export function buildCSVText(header, rows, delimiter = ',', spec = {}) {
+  const forceQuoteCols = spec.forceQuoteColumns || [];
+  
   /**
    * フィールドをCSV安全にエスケープ
-   * カンマ、引用符、改行を含む場合は引用符で囲む
+   * カンマ、引用符、改行を含む場合、あるいは仕様で強制的に引用符で囲む列の場合は引用符で囲む
    */
-  const escapeField = (field) => {
+  const escapeField = (field, colIndex) => {
     const str = field == null ? '' : String(field);
-    if (str.includes(delimiter) || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+    const colKey = spec.columns ? spec.columns[colIndex]?.key : null;
+    const forceQuote = colKey && forceQuoteCols.includes(colKey);
+
+    if (forceQuote || str.includes(delimiter) || str.includes('"') || str.includes('\n') || str.includes('\r')) {
       return '"' + str.replace(/"/g, '""') + '"';
     }
     return str;
   };
 
   const lines = [];
-  /* ヘッダー行 */
-  lines.push(header.map(escapeField).join(delimiter));
+  /* ヘッダー行 (機種仕様でhasHeader: falseでない場合のみ) */
+  if (spec.hasHeader !== false) {
+    lines.push(header.map((field, idx) => escapeField(field, idx)).join(delimiter));
+  }
+  
   /* データ行 */
   rows.forEach(row => {
-    lines.push(row.map(escapeField).join(delimiter));
+    lines.push(row.map((field, idx) => escapeField(field, idx)).join(delimiter));
   });
 
   return lines.join('\r\n') + '\r\n';

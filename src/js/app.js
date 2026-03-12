@@ -114,7 +114,13 @@ function initSpecs() {
   inputSelect.addEventListener('change', () => {
     state.inputSpec = getSpec(inputSelect.value);
     log.info('入力機種を変更', { specId: state.inputSpec?.id });
+    
+    // 現在のデータをクリア（カラム構造が変わるため）
+    // ※今後、データ変換処理を挟む場合は別途検討
     state.tableEditor.setSpec(state.inputSpec);
+    state.tableEditor.setData([]);
+    updateToolbarState(state.toolbarButtons, false);
+    
     runValidation();
     updateStatusBar();
   });
@@ -219,7 +225,7 @@ function handleImport() {
 async function loadFile(file) {
   log.info('ファイル読み込み開始', { name: file.name, size: file.size });
   try {
-    const { header, rows, encoding } = await parseCSVFile(file);
+    const { header, rows, encoding } = await parseCSVFile(file, state.inputSpec);
     state.csvHeader = header;
     state.detectedEncoding = encoding;
 

@@ -164,6 +164,22 @@ export function validateRow(rowData, spec, gaijiChars = new Set()) {
       }
     }
 
+    /* 機種固有の禁止文字チェック */
+    if (value && spec.forbiddenChars && spec.forbiddenChars.length > 0) {
+      const forbiddenFound = [];
+      for (const char of value) {
+        if (spec.forbiddenChars.includes(char)) {
+          forbiddenFound.push(char);
+        }
+      }
+      if (forbiddenFound.length > 0) {
+        fieldResults.push(createResult(SEVERITY.ERROR,
+          `機種固有禁止文字: ${[...new Set(forbiddenFound)].join(', ')}`,
+          { forbiddenChars: forbiddenFound }
+        ));
+      }
+    }
+
     if (fieldResults.length > 0) {
       results[col.key] = fieldResults;
     }
@@ -194,23 +210,25 @@ export function validateRow(rowData, spec, gaijiChars = new Set()) {
   for (let i = 1; i <= spec.phoneNumberSlots; i++) {
     const phoneVal = rowData[`phone${i}`];
     
-    /* アイコン番号のチェック (1-8は常時必須) */
+    /* アイコン番号のチェック (デフォルトは1-8) */
+    const iconRange = spec.iconRange || { min: 1, max: 8 };
     const iconKey = `icon${i}`;
     const iconVal = rowData[iconKey];
     const iconNum = parseInt(iconVal, 10);
-    if (isNaN(iconNum) || iconNum < 1 || iconNum > 8) {
+    if (isNaN(iconNum) || iconNum < iconRange.min || iconNum > iconRange.max) {
       if (!results[iconKey]) results[iconKey] = [];
-      results[iconKey].push(createResult(SEVERITY.ERROR, 'アイコン番号は1-8の範囲で指定してください'));
+      results[iconKey].push(createResult(SEVERITY.ERROR, `アイコン番号は${iconRange.min}-${iconRange.max}の範囲で指定してください`));
     }
 
     if (phoneVal && phoneVal.trim().length > 0) {
-      /* 発信番号属性のチェック (1,2) */
+      /* 発信番号属性のチェック (デフォルトは1-2) */
+      const dialAttrRange = spec.dialAttrRange || { min: 1, max: 2 };
       const dialAttrKey = `dialAttr${i}`;
       const dialAttrVal = rowData[dialAttrKey];
       const dialAttrNum = parseInt(dialAttrVal, 10);
-      if (dialAttrNum !== 1 && dialAttrNum !== 2) {
+      if (isNaN(dialAttrNum) || dialAttrNum < dialAttrRange.min || dialAttrNum > dialAttrRange.max) {
         if (!results[dialAttrKey]) results[dialAttrKey] = [];
-        results[dialAttrKey].push(createResult(SEVERITY.ERROR, '発信番号属性は1または2を指定してください'));
+        results[dialAttrKey].push(createResult(SEVERITY.ERROR, `発信番号属性は${dialAttrRange.min}-${dialAttrRange.max}の範囲で指定してください`));
       }
     }
   }
