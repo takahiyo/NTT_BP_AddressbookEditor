@@ -117,40 +117,21 @@ function hiraganaToKatakana(str) {
 }
 
 /** CORS ヘッダー */
-function corsHeaders(requestOrigin) {
-  const allowedOrigins = [
-    "https://ntt-bp-addressbookeditor.pages.dev",
-    "https://dev.ntt-bp-addressbookeditor.pages.dev"
-  ];
-  
-  // 完全一致または前方一致で確認（末尾スラッシュ等の差異を吸収）
-  let origin = allowedOrigins[0]; // デフォルトは本番
-  
-  if (requestOrigin) {
-    // requestOrigin を小文字化して比較
-    const originLower = requestOrigin.toLowerCase();
-    const matched = allowedOrigins.find(allowed => 
-      originLower === allowed || originLower.startsWith(allowed)
-    );
-    if (matched) {
-      origin = requestOrigin; // クライアントが送ってきたそのままの文字を返すのがベスト
-    }
-  }
-
+function corsHeaders() {
   return {
-    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
 }
 
 /** JSON レスポンスヘルパー */
-function jsonResponse(data, status = 200, requestOrigin = null) {
+function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       "Content-Type": "application/json",
-      ...corsHeaders(requestOrigin),
+      ...corsHeaders(),
     },
   });
 }
