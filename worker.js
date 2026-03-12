@@ -1,73 +1,135 @@
 /**
- * Cloudflare Worker: GitHub-D1 連携フリガナAPI
- * 
- * 1. GET /sync : GitHub から辞書を取得して D1 に同期
- * 2. POST /api/furigana : 名称を受け取り D1 を検索してフリガナを返却
+ * Cloudflare Worker: Yahoo! ルビ振りAPI v2 プロキシ
+ *
+ * フロントエンドからの漢字名称を受け取り、
+ * Yahoo! ルビ振りAPI を叩いてカタカナ読みを返す。
+ * APIキーをフロントに露出させないためのプロキシとして機能する。
  */
+
+const YAHOO_API_URL = "https://jlp.yahooapis.jp/FuriganaService/V2/furigana";
 
 export default {
   async fetch(request, env) {
-    const url = new URL(request.url);
-
-    // --- 1. 同期エンドポイント (GitHub -> D1) ---
-    if (url.pathname === "/sync") {
-      try {
-        // GitHub の Raw URL（適宜書き換えてください）
-        const GITHUB_DICT_URL = "https://raw.githubusercontent.com/ユーザー名/リポジトリ名/main/master_dict.json";
-        
-        const resp = await fetch(GITHUB_DICT_URL);
-        if (!resp.ok) throw new Error("GitHub からの取得に失敗しました");
-        
-        const dict = await resp.json();
-        
-        // D1 へデータを投入 (UPSERT)
-        const statements = Object.entries(dict).map(([surface, reading]) => {
-          return env.DB.prepare("INSERT INTO dictionary (surface, reading) VALUES (?, ?) ON CONFLICT(surface) DO UPDATE SET reading = EXCLUDED.reading")
-            .bind(surface, reading);
-        });
-
-        await env.DB.batch(statements);
-        
-        return new Response(JSON.stringify({ success: true, count: Object.keys(dict).length }), {
-          headers: { "Content-Type": "application/json" }
-        });
-      } catch (err) {
-        return new Response(JSON.stringify({ error: err.message }), { status: 500 });
-      }
+    // CORS: プリフライトリクエスト対応
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        headers: corsHeaders(),
+      });
     }
 
-    // --- 2. フリガナ検索 API ---
-    if (url.pathname === "/api/furigana" && request.method === "POST") {
-      try {
-        const { names } = await request.json(); // ['中村', '佐藤', ...] の配列を期待
-        if (!Array.isArray(names)) throw new Error("names must be an array");
-
-        const results = {};
-        
-        // 並列で D1 を検索
-        const tasks = names.map(async (name) => {
-          // 最長一致や分解マッチングは Worker 側でやると効率的
-          // ここでは単純な完全一致検索の例
-          const row = await env.DB.prepare("SELECT reading FROM dictionary WHERE surface = ?")
-            .bind(name).first();
-          if (row) {
-            results[name] = row.reading;
-          }
-        });
-
-        await Promise.all(tasks);
-
-        return new Response(JSON.stringify({ readings: results }), {
-          headers: { 
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*" // CORS許可
-          }
-        });
-      } catch (err) {
-        return new Response(JSON.stringify({ error: err.message }), { status: 500 });
-      }
+    if (request.method !== "POST") {
+      return jsonResponse({ error: "POST のみ対応しています" }, 405);
     }
 
-    return new Response("Not Found", { status: 404 });
-  }
+    try {
+      const { names } = await request.json(); // 例: ["中村", "佐藤", "株式会社テスト"]
+      if (!Array.isArray(names) || names.length === 0) {
+        return jsonResponse({ error: "names は空でない配列で指定してください" }, 400);
+      }
+
+      // Yahoo! API キーは Cloudflare の環境変数（シークレット）から取得
+      const appId = env.YAHOO_APP_ID;
+      if (!appId) {
+        return jsonResponse({ error: "YAHOO_APP_ID が設定されていません" }, 500);
+      }
+
+      // 各名称を Yahoo! API に問い合わせ
+      const readings = {};
+      const tasks = names.map(async (name) => {
+        try {
+          const reading = await fetchYahooFurigana(name, appId);
+          if (reading) {
+            readings[name] = reading;
+          }
+        } catch (err) {
+          // 個別のエラーは無視して続行（部分的な成功を許容）
+          console.error(`Yahoo! API エラー: ${name}`, err.message);
+        }
+      });
+
+      await Promise.all(tasks);
+
+      return jsonResponse({ readings });
+    } catch (err) {
+      return jsonResponse({ error: err.message }, 500);
+    }
+  },
 };
+
+/**
+ * Yahoo! ルビ振りAPI v2 を呼び出し、カタカナ読みを返す
+ * @param {string} text - 変換対象の文字列
+ * @param {string} appId - Yahoo! JAPAN アプリケーション ID
+ * @returns {Promise<string>} カタカナ読み
+ */
+async function fetchYahooFurigana(text, appId) {
+  const body = {
+    id: "furigana-proxy",
+    jsonrpc: "2.0",
+    method: "jlp.furiganaservice.furigana",
+    params: { q: text },
+  };
+
+  const resp = await fetch(YAHOO_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "User-Agent": "Yahoo AppID: " + appId,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!resp.ok) {
+    throw new Error(`Yahoo API HTTP ${resp.status}`);
+  }
+
+  const data = await resp.json();
+
+  // エラーレスポンスのチェック
+  if (data.error) {
+    throw new Error(`Yahoo API: ${data.error.message}`);
+  }
+
+  // word 配列からカタカナ読みを組み立てる
+  const words = data.result?.word || [];
+  let katakana = "";
+  for (const w of words) {
+    if (w.furigana) {
+      // ひらがな → カタカナ変換
+      katakana += hiraganaToKatakana(w.furigana);
+    } else {
+      // ふりがなが無い場合（記号・カタカナ等）はそのまま
+      katakana += w.surface || "";
+    }
+  }
+
+  return katakana;
+}
+
+/** ひらがな → カタカナ変換 */
+function hiraganaToKatakana(str) {
+  return str.replace(/[\u3041-\u3096]/g, (ch) =>
+    String.fromCharCode(ch.charCodeAt(0) + 0x60)
+  );
+}
+
+/** CORS ヘッダー */
+function corsHeaders() {
+  return {
+    "Access-Control-Allow-Origin": "https://ntt-bp-addressbookeditor.pages.dev",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
+}
+
+
+/** JSON レスポンスヘルパー */
+function jsonResponse(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      ...corsHeaders(),
+    },
+  });
+}
