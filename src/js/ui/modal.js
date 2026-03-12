@@ -195,3 +195,88 @@ export function showCityCodeModal() {
     setTimeout(() => input.focus(), 100);
   });
 }
+
+/**
+ * フリガナ生成の確認・選択モーダルを表示
+ * @param {Array<Object>} results - processAllFuriganaの結果
+ * @returns {Promise<Array<Object>|null>} 反映対象のデータの配列、キャンセル時はnull
+ */
+export function showFuriganaReviewModal(results) {
+  return new Promise(resolve => {
+    const container = document.createElement('div');
+    container.className = 'furigana-review';
+
+    const desc = document.createElement('p');
+    desc.textContent = UI_TEXT.MODAL.FURIGANA_REVIEW_DESC;
+    desc.style.marginBottom = '12px';
+    desc.style.color = 'var(--color-text-secondary)';
+    container.appendChild(desc);
+
+    const tableWrapper = document.createElement('div');
+    tableWrapper.className = 'modal-table-wrapper';
+    
+    const table = document.createElement('table');
+    table.className = 'modal-table';
+    
+    // ヘッダー
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+      <tr>
+        <th><input type="checkbox" id="furigana-check-all" checked></th>
+        <th>${UI_TEXT.MODAL.FURIGANA_COL_NAME}</th>
+        <th>${UI_TEXT.MODAL.FURIGANA_COL_CURRENT}</th>
+        <th>${UI_TEXT.MODAL.FURIGANA_COL_GENERATED}</th>
+      </tr>
+    `;
+    table.appendChild(thead);
+    
+    // ボディ
+    const tbody = document.createElement('tbody');
+    results.forEach((item, i) => {
+      const tr = document.createElement('tr');
+      const currentVal = item.current || '<空>';
+      tr.innerHTML = `
+        <td><input type="checkbox" class="furigana-row-check" data-index="${i}" checked></td>
+        <td class="cell-name">${item.name}</td>
+        <td class="cell-current">${currentVal}</td>
+        <td class="cell-generated">${item.generated}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    tableWrapper.appendChild(table);
+    container.appendChild(tableWrapper);
+
+    const { close } = showModal({
+      title: UI_TEXT.MODAL.FURIGANA_REVIEW_TITLE,
+      content: container,
+      buttons: [
+        {
+          label: UI_TEXT.MODAL.BTN_CANCEL,
+          style: 'secondary',
+          onClick: () => { close(); resolve(null); },
+        },
+        {
+          label: UI_TEXT.MODAL.BTN_APPLY,
+          style: 'primary',
+          onClick: () => {
+            const selected = [];
+            container.querySelectorAll('.furigana-row-check:checked').forEach(cb => {
+              selected.push(results[parseInt(cb.dataset.index)]);
+            });
+            close();
+            resolve(selected);
+          },
+        },
+      ],
+    });
+
+    // 全選択・解除
+    const checkAll = container.querySelector('#furigana-check-all');
+    checkAll.addEventListener('change', () => {
+      container.querySelectorAll('.furigana-row-check').forEach(cb => {
+        cb.checked = checkAll.checked;
+      });
+    });
+  });
+}
