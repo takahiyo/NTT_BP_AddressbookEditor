@@ -17,9 +17,10 @@ import { convertBetweenModels } from './services/model-converter.js';
 import { TableEditor } from './ui/table-editor.js';
 import { initToolbar, updateToolbarState } from './ui/toolbar.js';
 import { showToast, formatText } from './ui/toast.js';
-import { confirmDialog, showGaijiEditor, showCityCodeModal } from './ui/modal.js';
+import { confirmDialog, showGaijiEditor, showCityCodeModal, showFuriganaReviewModal } from './ui/modal.js';
 import { autoAssignMemoryNos } from './services/memory-service.js';
 import { processAllPhoneNumbers } from './services/phone-processor.js';
+import { processAllFurigana } from './services/furigana-processor.js';
 
 /* ============================================
  * アプリ状態
@@ -100,6 +101,7 @@ function initSpecs() {
     state.inputSpec = getSpec(inputSelect.value);
     state.tableEditor.setSpec(state.inputSpec);
     runValidation();
+    updateStatusBar();
   });
 
   outputSelect.addEventListener('change', () => {
@@ -135,6 +137,7 @@ function initToolbarUI() {
     onGaijiSettings: handleGaijiSettings,
     onAutoMemory: handleAutoMemory,
     onPhoneProcess: handlePhoneProcess,
+    onFurigana: handleFurigana,
   });
   updateToolbarState(state.toolbarButtons, false);
 }
@@ -457,6 +460,33 @@ async function handlePhoneProcess() {
   } else {
     showToast(`加工完了（${result.processedCount}件）`, 'success');
   }
+}
+
+/** フリガナ生成 */
+async function handleFurigana() {
+  const data = state.tableEditor.getData();
+  if (!data || data.length === 0) return;
+
+  const results = processAllFurigana(data, state.inputSpec);
+  if (results.length === 0) {
+    showToast('生成が必要なフリガナ（未入力または変更あり）はありません', 'info');
+    return;
+  }
+
+  const selectedResults = await showFuriganaReviewModal(results);
+  if (!selectedResults || selectedResults.length === 0) return;
+
+  const newData = [...data];
+  selectedResults.forEach(item => {
+    newData[item.index] = {
+      ...newData[item.index],
+      [item.fieldKey]: item.generated
+    };
+  });
+
+  state.tableEditor.updateData(newData);
+  runValidation();
+  showToast(`${selectedResults.length} 件のフリガナを更新しました`, 'success');
 }
 
 /* ============================================

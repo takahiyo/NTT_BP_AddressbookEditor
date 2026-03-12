@@ -98,16 +98,17 @@ export function initToolbar(container, handlers) {
   colDrop.menu.appendChild(createButton('btn-to-full', UI_TEXT.TOOLBAR.CONVERT_FULLWIDTH, '㊁', 'secondary', handlers.onToFull));
   colDrop.menu.appendChild(createButton('btn-remove-symbols', UI_TEXT.TOOLBAR.REMOVE_SYMBOLS, '✂️', 'secondary', handlers.onRemoveSymbols));
 
+  /* === 自動加工 === */
+  const autoProcDrop = createDropdown(UI_TEXT.TOOLBAR.CATEGORIES.AUTO_PROC, '🪄');
+  autoProcDrop.menu.appendChild(createButton('btn-phone-proc', UI_TEXT.TOOLBAR.PHONE_PROCESS, '📞', 'secondary', handlers.onPhoneProcess));
+  autoProcDrop.menu.appendChild(createButton('btn-furigana', UI_TEXT.TOOLBAR.GENERATE_FURIGANA, '📛', 'secondary', handlers.onFurigana));
+
   /* === 全体 === */
   const generalDrop = createDropdown(UI_TEXT.TOOLBAR.CATEGORIES.GENERAL, '⚙️');
   generalDrop.menu.appendChild(createButton('btn-auto-memory', UI_TEXT.TOOLBAR.AUTO_ASSIGN_MEMORY, '🔢', 'secondary', handlers.onAutoMemory));
   generalDrop.menu.appendChild(createButton('btn-truncate', UI_TEXT.TOOLBAR.TRUNCATE_ALL, '📏', 'warning', handlers.onTruncate));
   generalDrop.menu.appendChild(createButton('btn-delete-empty', UI_TEXT.TOOLBAR.DELETE_EMPTY_ROWS, '🧹', 'warning', handlers.onDeleteEmpty));
   generalDrop.menu.appendChild(createButton('btn-gaiji', UI_TEXT.TOOLBAR.GAIJI_SETTINGS, '⚙️', 'secondary', handlers.onGaijiSettings));
-
-  /* === 電話番号加工 === */
-  const phoneBtn = createButton('btn-phone-proc', UI_TEXT.TOOLBAR.CATEGORIES.PHONE_PROC, '📞', 'secondary', handlers.onPhoneProcess);
-  container.appendChild(phoneBtn);
 
   /* === 全検証 === */
   const validateBtn = createButton('btn-validate', UI_TEXT.TOOLBAR.CATEGORIES.VALIDATE, '✅', 'secondary', handlers.onValidate);
@@ -126,7 +127,7 @@ export function updateToolbarState(buttons, hasData) {
     'btn-export', 'btn-delete-row',
     'btn-validate', 'btn-to-half', 'btn-to-full',
     'btn-remove-symbols', 'btn-truncate', 'btn-delete-empty',
-    'btn-auto-memory', 'btn-phone-proc',
+    'btn-auto-memory', 'btn-phone-proc', 'btn-furigana',
   ];
   dataRequiredButtons.forEach(id => {
     if (buttons[id]) {

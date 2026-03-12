@@ -101,3 +101,43 @@
   padding: var(--spacing-md);
   color: var(--color-text-primary);
 }
+}
+
+/* === モーダル内テーブル（フリガナ確認用等） === */
+.modal-table-wrapper {
+  max-height: 400px;
+  overflow-y: auto;
+  border: var(--border-width) solid var(--color-glass-border);
+  border-radius: var(--border-radius-sm);
+  background: var(--color-bg-primary);
+}
+
+.modal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.modal-table th,
+.modal-table td {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: var(--border-width) solid var(--color-glass-border);
+  text-align: left;
+}
+
+.modal-table th {
+  position: sticky;
+  top: 0;
+  background: var(--color-bg-secondary);
+  font-weight: 600;
+  z-index: 1;
+}
+
+.modal-table td.cell-generated {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.modal-table tr:hover {
+  background: var(--color-glass-bg);
+}

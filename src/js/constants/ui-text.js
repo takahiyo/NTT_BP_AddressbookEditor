@@ -21,6 +21,7 @@ export const UI_TEXT = {
       EDIT_COL: '列編集',
       GENERAL: '全体',
       PHONE_PROC: '電話番号加工',
+      AUTO_PROC: '自動加工',
       VALIDATE: '全検証',
     },
     IMPORT_CSV: 'CSV読込',
@@ -36,6 +37,7 @@ export const UI_TEXT = {
     GAIJI_SETTINGS: '外字設定',
     AUTO_ASSIGN_MEMORY: 'メモリ採番',
     PHONE_PROCESS: '電話番号加工',
+    GENERATE_FURIGANA: 'フリガナ生成',
   },
 
   /* === テーブル === */
@@ -68,6 +70,12 @@ export const UI_TEXT = {
     BTN_CLOSE: '✕',
     CONFIRM_DELETE: '選択した{count}行を削除してよろしいですか？',
     CONFIRM_TRUNCATE: '超過文字を一括カットします。よろしいですか？',
+    FURIGANA_REVIEW_TITLE: 'フリガナ生成の確認',
+    FURIGANA_REVIEW_DESC: '生成されたフリガナを確認してください。チェックを入れると上書きします。',
+    FURIGANA_COL_NAME: '名称',
+    FURIGANA_COL_CURRENT: '現在',
+    FURIGANA_COL_GENERATED: '生成',
+    BTN_APPLY: '選択を反映',
   },
 
   /* === トースト === */
