@@ -45,7 +45,11 @@ export class TableEditor {
    */
   setSpec(spec) {
     this._spec = spec;
-    this._columns = spec.columns;
+    /* カラム定義にフィールドのUI情報(type, cssClass等)をマージ */
+    this._columns = spec.columns.map(col => {
+      const field = spec.fields.find(f => f.key === col.key) || {};
+      return { ...field, ...col };
+    });
     /* 空状態のプレースホルダーを表示 */
     if (this._data.length === 0) {
       this._render();
