@@ -124,6 +124,7 @@ export function defineSpec(partialSpec, items) {
       width: finalField.width || 'col-default',
       editable: finalField.editable !== false,
       cssClass: finalField.cssClass || '',
+      defaultValue: finalField.defaultValue || '',
     });
   });
 

@@ -105,7 +105,12 @@ export function padDataToCapacity(data, targetCount, spec, digitMode) {
     /* 仕様に合わせて初期値を設定 */
     spec.columns.forEach(col => {
       if (col.key !== 'memoryNo' && !col.key.startsWith('_')) {
-        if (col.key.startsWith('icon') || col.key.startsWith('dialAttr')) {
+        const uiField = spec.fields?.find(f => f.key === col.key);
+        const defVal = uiField?.defaultValue;
+
+        if (defVal !== undefined && defVal !== '') {
+          newRow[col.key] = defVal;
+        } else if (col.key.startsWith('icon') || col.key.startsWith('dialAttr')) {
           newRow[col.key] = '1'; /* アイコン・属性の初期値 */
         } else if (col.type === 'number') {
           newRow[col.key] = '0';

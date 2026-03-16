@@ -112,9 +112,9 @@ export class TableEditor {
 
     const newRow = {};
     this._spec.fields.forEach(f => {
-      newRow[f.key] = '';
-      /* アイコン番号のデフォルトは1 (0は不可) */
-      if (f.key.startsWith('icon')) {
+      newRow[f.key] = f.defaultValue !== undefined && f.defaultValue !== '' ? f.defaultValue : '';
+      /* アイコン番号等の旧互換対応（すでにdefaultValueがあれば上書きしない） */
+      if (f.key.startsWith('icon') && (!newRow[f.key] || newRow[f.key] === '0')) {
         newRow[f.key] = '1';
       }
     });

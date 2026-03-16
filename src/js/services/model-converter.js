@@ -60,7 +60,9 @@ export function convertBetweenModels(data, sourceSpec, targetSpec) {
       } else {
         /* 変換先にのみ存在するフィールドは初期値 */
         const fieldInfo = targetSpec.fields?.find(f => f.key === col.key) || {};
-        if (col.key.startsWith('icon') || col.key.startsWith('dialAttr')) {
+        if (fieldInfo.defaultValue !== undefined && fieldInfo.defaultValue !== '') {
+          newRow[col.key] = fieldInfo.defaultValue;
+        } else if (col.key.startsWith('icon') || col.key.startsWith('dialAttr')) {
           newRow[col.key] = '1';
         } else if (fieldInfo.type === 'number') {
           newRow[col.key] = '0';
