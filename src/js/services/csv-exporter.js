@@ -40,7 +40,21 @@ export function buildCSVText(header, rows, delimiter = ',', spec = {}) {
   
   /* データ行 */
   rows.forEach(row => {
-    lines.push(row.map((field, idx) => escapeField(field, idx)).join(delimiter));
+    let outputRow = row;
+    /* ZX-L 等、メモリ番号をCSVに含めない機種の対応 */
+    if (spec.skipMemoryNoInCSV) {
+      const memoryNoIdx = spec.columns.findIndex(col => col.key === 'memoryNo');
+      if (memoryNoIdx === -1) {
+          /* モデル定義自体に memoryNo がない場合は、全カラム出力 */
+          lines.push(row.map((field, idx) => escapeField(field, idx)).join(delimiter));
+      } else {
+          /* memoryNo 以外のカラムを抽出して出力 (ZX-L は memoryNo を UI 管理用に保持するが CSV にはない) */
+          const filteredRow = row.filter((_, idx) => idx !== memoryNoIdx);
+          lines.push(filteredRow.map((field, idx) => escapeField(field, idx)).join(delimiter));
+      }
+    } else {
+      lines.push(row.map((field, idx) => escapeField(field, idx)).join(delimiter));
+    }
   });
 
   return lines.join('\r\n') + '\r\n';
@@ -50,15 +64,21 @@ export function buildCSVText(header, rows, delimiter = ',', spec = {}) {
  * オブジェクト配列をカラム定義順の2次元配列に変換
  * @param {Array<Object>} dataObjects - キー付きデータオブジェクト配列
  * @param {Array<Object>} columns - カラム定義（keyを参照）
+ * @param {Object} spec - 機種仕様
  * @returns {Array<Array<string>>} 2次元配列
  */
-export function objectsToRows(dataObjects, columns) {
-  return dataObjects.map(obj =>
-    columns.map(col => {
+export function objectsToRows(dataObjects, columns, spec = {}) {
+  return dataObjects.map((obj, rowIndex) => {
+    /* メモリ番号の自動付与 (ZX-L 等、行番号ベースの場合) */
+    if (spec.skipMemoryNoInCSV && (obj.memoryNo === undefined || obj.memoryNo === '')) {
+        obj.memoryNo = String(rowIndex);
+    }
+    
+    return columns.map(col => {
       const val = obj[col.key];
       return val == null ? '' : String(val);
-    })
-  );
+    });
+  });
 }
 
 /**

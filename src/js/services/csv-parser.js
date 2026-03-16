@@ -123,8 +123,12 @@ export function detectSpecFromCSV(bytes) {
     if (spec.hasHeader === false) {
       /* ヘッダーなし機種: 1行目が全て数値/空文字であること */
       if (!isFirstRowAllNumericOrEmpty) continue;
-      /* BOM付きUTF-8であること (A1の特徴) */
-      if (hasBOM) return spec.id;
+      
+      /* A1: 17列かつUTF-8 BOM付き (既存ロジック) */
+      if (spec.id === 'a1' && hasBOM) return spec.id;
+      
+      /* ZX-L: 20列（BOMがなくても判定可能にする） */
+      if (spec.id === 'zxl' && columnCount === 20) return spec.id;
     } else {
       /* ヘッダーあり機種: 1行目に「TEN」が含まれること */
       if (isFirstRowAllNumericOrEmpty) continue;
