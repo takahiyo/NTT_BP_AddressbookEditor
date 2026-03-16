@@ -521,16 +521,26 @@ export class TableEditor {
         this._data[rowIndex][col.key] = value;
         this._updateByteCount(td, col.key, value);
 
-        /* 電話番号入力時にアイコンと属性を自動設定 (1) */
+        /* 電話番号入力時にアイコンと属性を自動設定・補正 (1) */
         if (col.type === 'phone' && value.trim().length > 0) {
           const index = col.key.replace('phone', '');
           const iconKey = `icon${index}`;
           const dialAttrKey = `dialAttr${index}`;
 
-          if (!this._data[rowIndex][iconKey] || this._data[rowIndex][iconKey] === '0') {
+          const currentIcon = this._data[rowIndex][iconKey];
+          const currentDialAttr = this._data[rowIndex][dialAttrKey];
+
+          /* アイコン番号の範囲チェック (1-8のみ有効) */
+          const isValidIcon = currentIcon && !isNaN(currentIcon) && 
+                              parseInt(currentIcon, 10) >= 1 && parseInt(currentIcon, 10) <= 8;
+          if (!isValidIcon) {
             this._updateCellValue(rowIndex, iconKey, '1');
           }
-          if (!this._data[rowIndex][dialAttrKey] || this._data[rowIndex][dialAttrKey] === '0') {
+
+          /* 発信番号属性の範囲チェック (1-2のみ有効) */
+          const isValidDialAttr = currentDialAttr && !isNaN(currentDialAttr) && 
+                                  parseInt(currentDialAttr, 10) >= 1 && parseInt(currentDialAttr, 10) <= 2;
+          if (!isValidDialAttr) {
             this._updateCellValue(rowIndex, dialAttrKey, '1');
           }
         }
