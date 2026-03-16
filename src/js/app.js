@@ -426,7 +426,7 @@ async function handleExport() {
   /* ヘッダー行を生成 */
   const header = exportSpec.columns.map(col => col.label);
   const rows = objectsToRows(exportData, exportSpec.columns);
-  const csvText = buildCSVText(header, rows);
+  const csvText = buildCSVText(header, rows, ',', exportSpec);
 
   /* ダウンロード */
   const filename = generateFilename(exportSpec.name);
