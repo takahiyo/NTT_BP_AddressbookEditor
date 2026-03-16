@@ -230,6 +230,20 @@ export class TableEditor {
     const startIndex = (this._currentPage - 1) * this._pageSize;
     const endIndex = Math.min(startIndex + this._pageSize, totalItems);
 
+    /* ページネーションコントロールの描画 (上部) */
+    this._renderPagination(startIndex, endIndex, totalItems, totalPages);
+
+    /* テーブル要素生成 */
+    this._tableEl = document.createElement('table');
+    this._tableEl.className = 'data-table';
+    this._tableEl.id = 'data-table';
+
+    /* ヘッダー */
+    this._renderHeader();
+
+    /* ボディ */
+    this._tbodyEl = document.createElement('tbody');
+
     for (let i = startIndex; i < endIndex; i++) {
       this._tbodyEl.appendChild(this._createRow(this._data[i], i));
     }
@@ -237,9 +251,6 @@ export class TableEditor {
     this._tableEl.appendChild(this._tbodyEl);
 
     this._container.appendChild(this._tableEl);
-    
-    /* ページネーションコントロールの描画 */
-    this._renderPagination(startIndex, endIndex, totalItems, totalPages);
   }
 
   /** 空状態のプレースホルダーを表示 */

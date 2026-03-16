@@ -49,8 +49,8 @@
 /* === テーブルヘッダー === */
 .data-table thead {
   position: sticky;
-  top: 0;
-  z-index: 10;
+  top: 48px; /* Pagination height */
+  z-index: 20;
 }
 
 .data-table th {
@@ -210,13 +210,14 @@ td:focus-within .cell-byte-count {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--color-glass-bg);
-  border-top: var(--border-width) solid var(--table-border-color);
-  backdrop-filter: blur(4px);
+  padding: 0 var(--spacing-md);
+  height: 48px;
+  background: var(--color-bg-secondary);
+  border-bottom: var(--border-width) solid var(--table-border-color);
+  backdrop-filter: blur(8px);
   position: sticky;
-  bottom: 0;
-  z-index: 10;
+  top: 0;
+  z-index: 30;
 }
 
 .pagination-controls__left,
