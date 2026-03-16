@@ -521,7 +521,7 @@ export class TableEditor {
         this._data[rowIndex][col.key] = value;
         this._updateByteCount(td, col.key, value);
 
-        /* 電話番号入力時にアイコンと属性を自動設定・補正 (1) */
+          /* 電話番号入力時にアイコンと属性を自動設定・補正 (1) */
         if (col.type === 'phone' && value.trim().length > 0) {
           const index = col.key.replace('phone', '');
           const iconKey = `icon${index}`;
@@ -531,16 +531,28 @@ export class TableEditor {
           const currentDialAttr = this._data[rowIndex][dialAttrKey];
 
           /* アイコン番号の範囲チェック (1-8のみ有効) */
-          const isValidIcon = currentIcon && !isNaN(currentIcon) && 
-                              parseInt(currentIcon, 10) >= 1 && parseInt(currentIcon, 10) <= 8;
+          let isValidIcon = false;
+          if (currentIcon !== undefined && currentIcon !== null && currentIcon !== '') {
+            const numIcon = parseInt(currentIcon, 10);
+            if (!isNaN(numIcon) && numIcon >= 1 && numIcon <= 8) {
+              isValidIcon = true;
+            }
+          }
           if (!isValidIcon) {
+            console.log(`[TableEditor] アイコン番号補正: ${currentIcon} -> 1`);
             this._updateCellValue(rowIndex, iconKey, '1');
           }
 
           /* 発信番号属性の範囲チェック (1-2のみ有効) */
-          const isValidDialAttr = currentDialAttr && !isNaN(currentDialAttr) && 
-                                  parseInt(currentDialAttr, 10) >= 1 && parseInt(currentDialAttr, 10) <= 2;
+          let isValidDialAttr = false;
+          if (currentDialAttr !== undefined && currentDialAttr !== null && currentDialAttr !== '') {
+            const numDialAttr = parseInt(currentDialAttr, 10);
+            if (!isNaN(numDialAttr) && numDialAttr >= 1 && numDialAttr <= 2) {
+              isValidDialAttr = true;
+            }
+          }
           if (!isValidDialAttr) {
+            console.log(`[TableEditor] 発信属性補正: ${currentDialAttr} -> 1`);
             this._updateCellValue(rowIndex, dialAttrKey, '1');
           }
         }
