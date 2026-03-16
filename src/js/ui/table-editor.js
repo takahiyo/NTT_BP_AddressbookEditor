@@ -11,6 +11,7 @@
  */
 
 import { UI_TEXT } from '../constants/ui-text.js';
+import { APP_CONFIG } from '../constants/app-config.js';
 import { getByteLength } from '../utils/char-utils.js';
 
 /**
