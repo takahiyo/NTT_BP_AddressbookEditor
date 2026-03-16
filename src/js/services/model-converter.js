@@ -53,16 +53,22 @@ export function convertBetweenModels(data, sourceSpec, targetSpec) {
       }
       
       const sourceKey = sourceColByKey ? sourceColByKey.key : (sourceColByLabel ? sourceColByLabel.key : null);
+      const sourceVal = sourceKey ? row[sourceKey] : undefined;
+      const fieldInfo = targetSpec.fields?.find(f => f.key === col.key) || {};
+      const defaultValue = fieldInfo.defaultValue;
 
-      if (sourceKey && row[sourceKey] !== undefined) {
-        /* マッピング元があればそのまま移行 */
-        newRow[col.key] = row[sourceKey];
+      if (sourceVal !== undefined && sourceVal !== '') {
+        /* マッピング元に値があればそれを採用 */
+        newRow[col.key] = sourceVal;
+      } else if (defaultValue !== undefined && defaultValue !== '') {
+        /* マッピング元が空（または存在しない）かつ、変換先にデフォルト値があれば採用 */
+        newRow[col.key] = defaultValue;
+      } else if (sourceVal !== undefined) {
+        /* マッピング元は存在するが空値で、デフォルト値も無い場合は空値を維持 */
+        newRow[col.key] = sourceVal;
       } else {
-        /* 変換先にのみ存在するフィールドは初期値 */
-        const fieldInfo = targetSpec.fields?.find(f => f.key === col.key) || {};
-        if (fieldInfo.defaultValue !== undefined && fieldInfo.defaultValue !== '') {
-          newRow[col.key] = fieldInfo.defaultValue;
-        } else if (col.key.startsWith('icon') || col.key.startsWith('dialAttr')) {
+        /* 変換先にのみ存在するフィールドでデフォルト値も無い場合 */
+        if (col.key.startsWith('icon') || col.key.startsWith('dialAttr')) {
           newRow[col.key] = '1';
         } else if (fieldInfo.type === 'number') {
           newRow[col.key] = '0';
