@@ -59,3 +59,64 @@ export function autoAssignMemoryNos(data, spec, digitMode) {
 
   return { data: newData, assignedCount };
 }
+
+/**
+ * データを指定行数までパディング（初期値と未使用メモリ番号で埋める）
+ * @param {Array<Object>} data - 元データ
+ * @param {number} targetCount - 目標行数
+ * @param {Object} spec - 基準とする機種仕様
+ * @param {string} digitMode - 桁数モード
+ * @returns {Array<Object>} パディング後のデータ
+ */
+export function padDataToCapacity(data, targetCount, spec, digitMode) {
+  if (data.length >= targetCount) return data;
+  if (!spec.digitModes || !spec.digitModes[digitMode]) return data;
+
+  const padLen = parseInt(digitMode, 10) || 0;
+  const range = spec.digitModes[digitMode].shared;
+  const min = range.min;
+  const max = range.max;
+
+  const usedNos = new Set();
+  data.forEach(row => {
+    if (row.memoryNo) {
+      const num = parseInt(row.memoryNo, 10);
+      if (!isNaN(num)) usedNos.add(num);
+    }
+  });
+
+  const newData = [...data];
+  let currentSearch = min;
+
+  for (let i = data.length; i < targetCount; i++) {
+    while (usedNos.has(currentSearch) && currentSearch <= max) {
+      currentSearch++;
+    }
+
+    /* メモリ番号文字列生成 */
+    let memoryNoStr = '';
+    if (currentSearch <= max) {
+      memoryNoStr = String(currentSearch).padStart(padLen, '0');
+      usedNos.add(currentSearch);
+    }
+
+    const newRow = { memoryNo: memoryNoStr };
+    
+    /* 仕様に合わせて初期値を設定 */
+    spec.columns.forEach(col => {
+      if (col.key !== 'memoryNo' && !col.key.startsWith('_')) {
+        if (col.key.startsWith('icon') || col.key.startsWith('dialAttr')) {
+          newRow[col.key] = '1'; /* アイコン・属性の初期値 */
+        } else if (col.type === 'number') {
+          newRow[col.key] = '0';
+        } else {
+          newRow[col.key] = '';
+        }
+      }
+    });
+    
+    newData.push(newRow);
+  }
+
+  return newData;
+}

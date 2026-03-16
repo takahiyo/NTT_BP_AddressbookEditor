@@ -18,7 +18,7 @@ import { TableEditor } from './ui/table-editor.js';
 import { initToolbar, updateToolbarState } from './ui/toolbar.js';
 import { showToast, formatText } from './ui/toast.js';
 import { confirmDialog, showGaijiEditor, showCityCodeModal, showFuriganaReviewModal } from './ui/modal.js';
-import { autoAssignMemoryNos } from './services/memory-service.js';
+import { autoAssignMemoryNos, padDataToCapacity } from './services/memory-service.js';
 import { processAllPhoneNumbers } from './services/phone-processor.js';
 import { processAllFurigana } from './services/furigana-processor.js';
 import { createLogger, getLogText } from './utils/logger.js';
@@ -125,8 +125,35 @@ function initSpecs() {
     updateStatusBar();
   });
 
-  outputSelect.addEventListener('change', () => {
-    state.outputSpec = getSpec(outputSelect.value);
+  outputSelect.addEventListener('change', async () => {
+    const newSpec = getSpec(outputSelect.value);
+
+    /* A1のパディング要件チェック */
+    if (newSpec.id === 'a1') {
+      const data = state.tableEditor.getData();
+      const currentCount = data.length;
+      const targetCount = 20000;
+
+      if (currentCount > 0 && currentCount < targetCount) {
+        const msg = formatText(UI_TEXT.MODAL.CONFIRM_PAD_A1, { current: currentCount });
+        const ok = await confirmDialog(msg);
+
+        if (ok) {
+          log.info('A1データパディングを実行', { current: currentCount, target: targetCount });
+          /* inputSpec 基準で行を増やす（この後出力時に convertBetweenModels されるため） */
+          const paddedData = padDataToCapacity(data, targetCount, state.inputSpec, state.digitMode);
+          state.tableEditor.updateData(paddedData);
+          runValidation();
+          updateStatusBar();
+        } else {
+          /* キャンセルされたら元の選択に戻す */
+          outputSelect.value = state.outputSpec?.id || APP_CONFIG.DEFAULT_SPEC_ID;
+          return;
+        }
+      }
+    }
+
+    state.outputSpec = newSpec;
     log.info('出力機種を変更', { specId: state.outputSpec?.id });
     state.tableEditor.setMappingSpec(state.outputSpec);
   });
