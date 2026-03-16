@@ -33,6 +33,8 @@ export class TableEditor {
     this._tbodyEl = null;
     this._selectedColumns = new Set();
     this._sortConfig = { key: null, order: 'asc' }; // asc or desc
+    this._currentPage = 1;
+    this._pageSize = 100;
   }
 
   /**
@@ -55,6 +57,7 @@ export class TableEditor {
   setData(data) {
     this._data = data;
     this._selectedRows.clear();
+    this._currentPage = 1;
     this._render();
   }
 
@@ -106,6 +109,9 @@ export class TableEditor {
 
     this._data.splice(insertAt, 0, newRow);
     this._reindex();
+    
+    /* 挿入された行があるページに移動 */
+    this._currentPage = Math.ceil((insertAt + 1) / this._pageSize) || 1;
     this._render();
     
     /* 追加された行をスクロールで見えるように（簡易実装） */
@@ -138,6 +144,7 @@ export class TableEditor {
   updateData(newData) {
     this._data = newData;
     this._reindex();
+    this._currentPage = 1;
     this._render();
   }
 
@@ -190,6 +197,7 @@ export class TableEditor {
       return 0;
     });
 
+    this._currentPage = 1;
     this._render();
   }
 
@@ -212,12 +220,26 @@ export class TableEditor {
 
     /* ボディ */
     this._tbodyEl = document.createElement('tbody');
-    this._data.forEach((row, rowIndex) => {
-      this._tbodyEl.appendChild(this._createRow(row, rowIndex));
-    });
+    
+    /* ページネーション計算 */
+    const totalItems = this._data.length;
+    const totalPages = Math.ceil(totalItems / this._pageSize) || 1;
+    if (this._currentPage > totalPages) this._currentPage = totalPages;
+    if (this._currentPage < 1) this._currentPage = 1;
+
+    const startIndex = (this._currentPage - 1) * this._pageSize;
+    const endIndex = Math.min(startIndex + this._pageSize, totalItems);
+
+    for (let i = startIndex; i < endIndex; i++) {
+      this._tbodyEl.appendChild(this._createRow(this._data[i], i));
+    }
+    
     this._tableEl.appendChild(this._tbodyEl);
 
     this._container.appendChild(this._tableEl);
+    
+    /* ページネーションコントロールの描画 */
+    this._renderPagination(startIndex, endIndex, totalItems, totalPages);
   }
 
   /** 空状態のプレースホルダーを表示 */
@@ -294,6 +316,89 @@ export class TableEditor {
 
     thead.appendChild(tr);
     this._tableEl.appendChild(thead);
+  }
+
+  /**
+   * ページネーションコントロールを描画
+   * @param {number} startIndex - 現在ページの開始インデックス
+   * @param {number} endIndex - 現在ページの終了インデックス(含まない)
+   * @param {number} totalItems - 総アイテム数
+   * @param {number} totalPages - 総ページ数
+   */
+  _renderPagination(startIndex, endIndex, totalItems, totalPages) {
+    if (totalItems === 0) return;
+
+    const paginationContainer = document.createElement('div');
+    paginationContainer.className = 'pagination-controls';
+
+    const leftGroup = document.createElement('div');
+    leftGroup.className = 'pagination-controls__left';
+
+    const infoSpan = document.createElement('span');
+    infoSpan.className = 'pagination-controls__info';
+    let infoText = UI_TEXT.TABLE.PAGINATION_INFO
+      .replace('{start}', startIndex + 1)
+      .replace('{end}', endIndex)
+      .replace('{total}', totalItems);
+    infoSpan.textContent = infoText;
+
+    const pageSizeSelect = document.createElement('select');
+    pageSizeSelect.className = 'pagination-controls__select';
+    [100, 500, 1000].forEach(size => {
+      const option = document.createElement('option');
+      option.value = size;
+      option.textContent = `${size}件/ページ`;
+      if (size === this._pageSize) option.selected = true;
+      pageSizeSelect.appendChild(option);
+    });
+    pageSizeSelect.addEventListener('change', (e) => {
+      this._pageSize = parseInt(e.target.value, 10);
+      this._currentPage = 1;
+      this._render();
+    });
+
+    leftGroup.appendChild(infoSpan);
+    leftGroup.appendChild(pageSizeSelect);
+
+    const rightGroup = document.createElement('div');
+    rightGroup.className = 'pagination-controls__right';
+
+    const pageInfoSpan = document.createElement('span');
+    pageInfoSpan.className = 'pagination-controls__info';
+    pageInfoSpan.textContent = UI_TEXT.TABLE.PAGINATION_PAGE
+      .replace('{current}', this._currentPage)
+      .replace('{total}', totalPages);
+
+    const btnPrev = document.createElement('button');
+    btnPrev.className = 'pagination-controls__btn';
+    btnPrev.textContent = UI_TEXT.TABLE.PAGINATION_PREV;
+    btnPrev.disabled = this._currentPage <= 1;
+    btnPrev.addEventListener('click', () => {
+      if (this._currentPage > 1) {
+        this._currentPage--;
+        this._render();
+      }
+    });
+
+    const btnNext = document.createElement('button');
+    btnNext.className = 'pagination-controls__btn';
+    btnNext.textContent = UI_TEXT.TABLE.PAGINATION_NEXT;
+    btnNext.disabled = this._currentPage >= totalPages;
+    btnNext.addEventListener('click', () => {
+      if (this._currentPage < totalPages) {
+        this._currentPage++;
+        this._render();
+      }
+    });
+
+    rightGroup.appendChild(pageInfoSpan);
+    rightGroup.appendChild(btnPrev);
+    rightGroup.appendChild(btnNext);
+
+    paginationContainer.appendChild(leftGroup);
+    paginationContainer.appendChild(rightGroup);
+    
+    this._container.appendChild(paginationContainer);
   }
 
   /**

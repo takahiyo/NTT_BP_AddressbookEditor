@@ -49,6 +49,10 @@ export const UI_TEXT = {
     EMPTY_TEXT: 'CSVファイルを読み込んでください',
     EMPTY_HINT: 'ドラッグ＆ドロップまたは「CSV読込」ボタンから',
     BYTE_COUNT_FORMAT: '{current}/{max}B',
+    PAGINATION_PREV: '前のページ',
+    PAGINATION_NEXT: '次のページ',
+    PAGINATION_INFO: '{start} - {end} 件 / 全 {total} 件',
+    PAGINATION_PAGE: '{current} / {total} ページ',
   },
 
   /* === ステータスバー === */
