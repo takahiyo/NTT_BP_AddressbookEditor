@@ -286,8 +286,45 @@ async function loadFile(file) {
   }
 }
 
+/**
+ * 書出前の機種固有エラー警告チェック
+ * @param {Array<Object>} exportData - 出力用データ
+ * @param {Object} exportSpec - 出力機種仕様
+ * @returns {Promise<boolean>} 処理を続行する場合はtrue
+ */
+async function checkExportWarnings(exportData, exportSpec) {
+  if (!exportSpec.exportWarnings || exportSpec.exportWarnings.length === 0) return true;
+
+  for (const warning of exportSpec.exportWarnings) {
+    let hasIssue = false;
+    
+    /* 警告タイプごとの判定ロジック */
+    if (warning.type === 'emptyPhoneRows') {
+      hasIssue = exportData.some(row => {
+        let isEmpty = true;
+        for (let i = 1; i <= exportSpec.phoneNumberSlots; i++) {
+          const val = row[`phone${i}`];
+          if (val && val.trim().length > 0) {
+            isEmpty = false;
+            break;
+          }
+        }
+        return isEmpty;
+      });
+    }
+
+    if (hasIssue) {
+      const msgTemplate = UI_TEXT.MODAL[warning.messageKey] || warning.messageKey;
+      const msg = formatText(msgTemplate, { modelName: exportSpec.name });
+      const ok = await confirmDialog(msg);
+      if (!ok) return false;
+    }
+  }
+  return true;
+}
+
 /** CSV書出ボタンのハンドラ */
-function handleExport() {
+async function handleExport() {
   const data = state.tableEditor.getData();
   if (!data || data.length === 0) {
     showToast(UI_TEXT.TOAST.NO_DATA, 'error');
@@ -305,6 +342,13 @@ function handleExport() {
     const result = convertBetweenModels(data, state.inputSpec, state.outputSpec);
     exportData = result.data;
     result.warnings.forEach(w => showToast(w, 'info'));
+  }
+
+  /* 書出前の機種固有警告チェック */
+  const canExport = await checkExportWarnings(exportData, exportSpec);
+  if (!canExport) {
+    log.info('CSV書出キャンセル', { reason: 'export warning rejected' });
+    return;
   }
 
   /* ヘッダー行を生成 */

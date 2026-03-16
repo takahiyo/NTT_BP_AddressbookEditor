@@ -33,6 +33,10 @@ export const ZX2SM_SPEC = defineSpec({
   headerColumns: 17,
   requirePhoneNumber: true,
   
+  exportWarnings: [
+    { type: 'emptyPhoneRows', messageKey: 'EXPORT_WARNING_EMPTY_ROWS' }
+  ],
+  
   digitModes: {
     '2digit': {
       label: '2桁',
