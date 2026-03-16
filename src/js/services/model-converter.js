@@ -21,11 +21,14 @@ export function convertBetweenModels(data, sourceSpec, targetSpec) {
   const targetKeys = new Set(targetSpec.columns.map(c => c.key));
   const sourceKeys = new Set(sourceSpec.columns.map(c => c.key));
 
-  /* 変換元にあって変換先に無いフィールドの警告 */
-  sourceKeys.forEach(key => {
-    if (!targetKeys.has(key) && !key.startsWith('_')) {
-      const col = sourceSpec.columns.find(c => c.key === key);
-      warnings.push(`フィールド「${col?.label || key}」は変換先に存在しないため除外されます`);
+  /* 変換元にあって変換先に無いフィールドの警告（ラベル基準でも見つからないもの） */
+  sourceSpec.columns.forEach(sourceCol => {
+    if (!sourceCol.key.startsWith('_')) {
+      const targetColByKey = targetSpec.columns.find(c => c.key === sourceCol.key);
+      const targetColByLabel = targetSpec.columns.find(c => c.label === sourceCol.label);
+      if (!targetColByKey && !targetColByLabel) {
+        warnings.push(`フィールド「${sourceCol.label || sourceCol.key}」は変換先に存在しないため除外されます`);
+      }
     }
   });
 
@@ -39,13 +42,31 @@ export function convertBetweenModels(data, sourceSpec, targetSpec) {
   /* 変換処理 */
   const convertedData = data.map(row => {
     const newRow = { _rowIndex: row._rowIndex };
+    
     targetSpec.columns.forEach(col => {
-      if (row[col.key] !== undefined) {
-        /* 共通キーがあればそのまま移行 */
-        newRow[col.key] = row[col.key];
+      /* マッピング元のキーを探す（まずkey完全一致、次にlabel一致） */
+      const sourceColByKey = sourceSpec.columns.find(c => c.key === col.key);
+      let sourceColByLabel = null;
+      /* labelが同一であれば引き継ぎ対象とする（例: ZX2SMの「グループ」 -> A1の「グループ」） */
+      if (!sourceColByKey) {
+         sourceColByLabel = sourceSpec.columns.find(c => c.label === col.label);
+      }
+      
+      const sourceKey = sourceColByKey ? sourceColByKey.key : (sourceColByLabel ? sourceColByLabel.key : null);
+
+      if (sourceKey && row[sourceKey] !== undefined) {
+        /* マッピング元があればそのまま移行 */
+        newRow[col.key] = row[sourceKey];
       } else {
-        /* 変換先にのみ存在するフィールドはデフォルト値 */
-        newRow[col.key] = col.type === 'number' ? '0' : '';
+        /* 変換先にのみ存在するフィールドは初期値 */
+        const fieldInfo = targetSpec.fields?.find(f => f.key === col.key) || {};
+        if (col.key.startsWith('icon') || col.key.startsWith('dialAttr')) {
+          newRow[col.key] = '1';
+        } else if (fieldInfo.type === 'number') {
+          newRow[col.key] = '0';
+        } else {
+          newRow[col.key] = '';
+        }
       }
     });
     return newRow;

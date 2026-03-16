@@ -128,10 +128,18 @@ function initSpecs() {
   outputSelect.addEventListener('change', async () => {
     const newSpec = getSpec(outputSelect.value);
 
-    /* A1のパディング要件チェック */
+    /* --- 1. 出力機種に合わせてデータを変換（レイアウト変更） --- */
+    const currentData = state.tableEditor.getData();
+    let convertedData = currentData;
+    if (state.inputSpec.id !== newSpec.id && currentData.length > 0) {
+      const result = convertBetweenModels(currentData, state.inputSpec, newSpec);
+      convertedData = result.data;
+      result.warnings.forEach(w => showToast(w, 'info'));
+    }
+
+    /* --- 2. A1向けパディング処理（変換後のレイアウトに基づく） --- */
     if (newSpec.id === 'a1') {
-      const data = state.tableEditor.getData();
-      const currentCount = data.length;
+      const currentCount = convertedData.length;
       const targetCount = 20000;
 
       if (currentCount > 0 && currentCount < targetCount) {
@@ -140,22 +148,33 @@ function initSpecs() {
 
         if (ok) {
           log.info('A1データパディングを実行', { current: currentCount, target: targetCount });
-          /* inputSpec 基準で行を増やす（この後出力時に convertBetweenModels されるため） */
-          const paddedData = padDataToCapacity(data, targetCount, state.inputSpec, state.digitMode);
-          state.tableEditor.updateData(paddedData);
-          runValidation();
-          updateStatusBar();
+          /* A1のデフォルト桁数モードを取得してパディング */
+          const defaultDigitMode = newSpec.digitModes ? Object.keys(newSpec.digitModes)[0] : APP_CONFIG.DEFAULT_DIGIT_MODE;
+          convertedData = padDataToCapacity(convertedData, targetCount, newSpec, defaultDigitMode);
         } else {
           /* キャンセルされたら元の選択に戻す */
-          outputSelect.value = state.outputSpec?.id || APP_CONFIG.DEFAULT_SPEC_ID;
+          outputSelect.value = state.outputSpec?.id || state.inputSpec.id;
           return;
         }
       }
     }
 
+    /* --- 3. 新しい機種を「入力機種 兼 出力機種」として画面再構築 --- */
+    state.inputSpec = newSpec;
     state.outputSpec = newSpec;
-    log.info('出力機種を変更', { specId: state.outputSpec?.id });
-    state.tableEditor.setMappingSpec(state.outputSpec);
+    
+    inputSelect.value = newSpec.id;
+    updateDigitModeSelect(newSpec);
+
+    log.info('出力機種を変更（画面を再構築）', { specId: newSpec.id });
+    
+    state.tableEditor.setSpec(newSpec);
+    state.tableEditor.setMappingSpec(newSpec); /* 同じ機種をセットすることで2段ヘッダーを消す */
+    state.tableEditor.setData(convertedData);
+
+    updateToolbarState(state.toolbarButtons, convertedData.length > 0);
+    runValidation();
+    updateStatusBar();
   });
 
   digitSelect.addEventListener('change', () => {
@@ -163,6 +182,32 @@ function initSpecs() {
     log.info('桁数モードを変更', { mode: state.digitMode });
   });
 }
+
+/** 桁数モードセレクトボックスを再構築する */
+function updateDigitModeSelect(spec) {
+  const digitSelect = document.getElementById('digit-mode-select');
+  digitSelect.innerHTML = ''; // クリア
+
+  if (!spec || !spec.digitModes) return;
+
+  const modes = Object.keys(spec.digitModes);
+  modes.forEach(key => {
+    const mode = spec.digitModes[key];
+    digitSelect.add(new Option(mode.label, key));
+  });
+
+  /* 以前の選択値があればそれを、なければデフォルト、それもなければ最初のものを選択 */
+  if (modes.includes(state.digitMode)) {
+    digitSelect.value = state.digitMode;
+  } else if (modes.includes(APP_CONFIG.DEFAULT_DIGIT_MODE)) {
+    digitSelect.value = APP_CONFIG.DEFAULT_DIGIT_MODE;
+    state.digitMode = APP_CONFIG.DEFAULT_DIGIT_MODE;
+  } else if (modes.length > 0) {
+    digitSelect.value = modes[0];
+    state.digitMode = modes[0];
+  }
+}
+
 
 /** テーブルエディタの初期化 */
 function initTableEditor() {

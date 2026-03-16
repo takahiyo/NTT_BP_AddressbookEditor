@@ -56,13 +56,10 @@ export class TableEditor {
     }
   }
 
-  /**
-   * 出力機種仕様（マッピング用）を設定
-   * @param {Object} spec - 出力機種仕様
-   */
   setMappingSpec(spec) {
     this._mappingSpec = spec;
-    this._render();
+    /* this._render(); 不要になったため呼び出しのみ残すか削除するが、互換性維持のため残す。
+       あるいは何もせずリターンでOK */
   }
 
   /**
@@ -283,18 +280,11 @@ export class TableEditor {
   /** テーブルヘッダーを生成 */
   _renderHeader() {
     const thead = document.createElement('thead');
-    
-    /* 2列表示が必要か判定（入力と出力が異なる場合） */
-    const isMapping = this._mappingSpec && this._mappingSpec.id !== this._spec.id;
-    
-    /* 1行目（入力機種 or 通常ヘッダー） */
     const tr1 = document.createElement('tr');
-    tr1.className = isMapping ? 'header-row--input' : '';
 
-    /* 選択チェックボックス列 (RowSpan 2) */
+    /* 選択チェックボックス列 */
     const thCheck = document.createElement('th');
     thCheck.className = 'col-rownum';
-    if (isMapping) thCheck.rowSpan = 2;
     const selectAll = document.createElement('input');
     selectAll.type = 'checkbox';
     selectAll.id = 'select-all-rows';
@@ -302,24 +292,16 @@ export class TableEditor {
     thCheck.appendChild(selectAll);
     tr1.appendChild(thCheck);
 
-    /* 行番号列 (RowSpan 2) */
+    /* 行番号列 */
     const thNum = document.createElement('th');
     thNum.className = 'col-rownum';
-    if (isMapping) thNum.rowSpan = 2;
     thNum.textContent = UI_TEXT.TABLE.ROW_NUM;
     tr1.appendChild(thNum);
 
-    /* 2行目（出力機種の対応カラム名） */
-    const tr2 = isMapping ? document.createElement('tr') : null;
-    if (tr2) tr2.className = 'header-row--output';
-
     /* データ列 */
     this._columns.forEach(col => {
-      const isDiscarded = isMapping && !this._mappingSpec.columns.some(targetCol => targetCol.key === col.key);
-
       const th = document.createElement('th');
       th.className = col.cssClass || '';
-      if (isDiscarded) th.classList.add('col--discarded');
       
       /* 列選択用チェックボックス */
       const colCheck = document.createElement('input');
@@ -353,24 +335,9 @@ export class TableEditor {
         th.title = `最大${constraint.maxBytes}バイト`;
       }
       tr1.appendChild(th);
-
-      /* 出力用ヘッダーセルの作成 */
-      if (tr2) {
-        const thSub = document.createElement('th');
-        thSub.className = col.cssClass || '';
-        if (isDiscarded) {
-          thSub.classList.add('col--discarded');
-          thSub.innerHTML = '<span class="header-discard-label">(破棄)</span>';
-        } else {
-          const targetCol = this._mappingSpec.columns.find(tc => tc.key === col.key);
-          thSub.textContent = targetCol ? targetCol.label : col.label;
-        }
-        tr2.appendChild(thSub);
-      }
     });
 
     thead.appendChild(tr1);
-    if (tr2) thead.appendChild(tr2);
     this._tableEl.appendChild(thead);
   }
 
@@ -505,12 +472,8 @@ export class TableEditor {
 
     /* データセル */
     this._columns.forEach(col => {
-      const isDiscarded = this._mappingSpec && this._mappingSpec.id !== this._spec.id && 
-                          !this._mappingSpec.columns.some(targetCol => targetCol.key === col.key);
-
       const td = document.createElement('td');
       td.className = col.cssClass || '';
-      if (isDiscarded) td.classList.add('col--discarded');
       td.dataset.fieldKey = col.key;
 
       const input = document.createElement('input');
