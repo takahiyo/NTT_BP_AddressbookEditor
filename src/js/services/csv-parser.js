@@ -1,9 +1,11 @@
 /**
  * CSVパーサー
  * ファイル読み込み → エンコーディング判定 → CSVパース → データ配列化
+ * 機種自動判別機能を含む
  */
 
-import { detectEncoding, decodeBytes } from '../utils/encoding.js';
+import { detectEncoding, detectBOM, decodeBytes } from '../utils/encoding.js';
+import { getAllSpecs } from '../models/spec-registry.js';
 
 /**
  * CSVテキストをパースして2次元配列に変換
@@ -89,17 +91,65 @@ export function parseCSVText(text, delimiter = ',') {
 }
 
 /**
+ * CSVのバイト列から機種を自動判別する
+ * エンコーディング・ヘッダー有無・列数などの特徴を照合
+ * @param {Uint8Array} bytes - ファイルのバイト列
+ * @returns {string|null} 一致した機種のID、判別不能ならnull
+ */
+export function detectSpecFromCSV(bytes) {
+  const allSpecs = getAllSpecs();
+  const encoding = detectEncoding(bytes);
+  const hasBOM = detectBOM(bytes) === 'UTF-8';
+  const text = decodeBytes(bytes, encoding);
+
+  /* 最初の1行だけパースして特徴を調べる */
+  const firstLineEnd = text.indexOf('\n');
+  const firstLine = firstLineEnd >= 0 ? text.substring(0, firstLineEnd) : text;
+  const firstFields = parseCSVText(firstLine + '\n')[0] || [];
+  const columnCount = firstFields.length;
+
+  /* 1行目がヘッダー行か判定（数値/空文字のみなら非ヘッダー） */
+  const isFirstRowAllNumericOrEmpty = firstFields.every(
+    f => f === '' || /^\d+$/.test(f.trim())
+  );
+
+  for (const spec of allSpecs) {
+    const expectedCols = spec.expectedColumns || spec.headerColumns;
+
+    /* 列数チェック（定義されている場合） */
+    if (expectedCols && columnCount !== expectedCols) continue;
+
+    /* ヘッダー有無チェック */
+    if (spec.hasHeader === false) {
+      /* ヘッダーなし機種: 1行目が全て数値/空文字であること */
+      if (!isFirstRowAllNumericOrEmpty) continue;
+      /* BOM付きUTF-8であること (A1の特徴) */
+      if (hasBOM) return spec.id;
+    } else {
+      /* ヘッダーあり機種: 1行目に「TEN」が含まれること */
+      if (isFirstRowAllNumericOrEmpty) continue;
+      if (firstFields[0]?.trim() === 'TEN') return spec.id;
+    }
+  }
+
+  return null;
+}
+
+/**
  * ファイルからCSVデータを読み込む
- * エンコーディング自動判定 → パース → ヘッダー行分離/生成
+ * エンコーディング自動判定 → 機種自動判別 → パース → ヘッダー行分離/生成
  * @param {File} file - 読み込むファイルオブジェクト
  * @param {Object} spec - 現在の機種仕様
  * @param {string} delimiter - 区切り文字（デフォルト: ','）
- * @returns {Promise<{header: Array<string>, rows: Array<Array<string>>, encoding: string}>}
+ * @returns {Promise<{header: Array<string>, rows: Array<Array<string>>, encoding: string, detectedSpecId: string|null}>}
  */
 export async function parseCSVFile(file, spec, delimiter = ',') {
   /* ファイルをArrayBufferとして読み込み */
   const buffer = await file.arrayBuffer();
   const bytes = new Uint8Array(buffer);
+
+  /* 機種自動判別 */
+  const detectedSpecId = detectSpecFromCSV(bytes);
 
   /* エンコーディング判定 */
   const encoding = detectEncoding(bytes);
@@ -111,17 +161,13 @@ export async function parseCSVFile(file, spec, delimiter = ',') {
   const allRows = parseCSVText(text, delimiter);
 
   if (allRows.length === 0) {
-    return { header: [], rows: [], encoding };
+    return { header: [], rows: [], encoding, detectedSpecId };
   }
 
   /* 列数の簡易チェック (データ行の先頭最大3行) */
   if (spec.expectedColumns) {
     const rowsToCheck = Math.min(3, allRows.length);
     for (let i = 0; i < rowsToCheck; i++) {
-        // hasHeader: true の場合は2行目(index: 1)からチェックすべきだが、
-        // ZX2SMは17列、A1も17列なのでヘッダー行を含めて一旦チェック可能。
-        // spec.expectedColumns と一致するかどうか。
-        // ※空行はすでにparseCSVTextで除外されている
         if (allRows[i].length !== spec.expectedColumns) {
             throw new Error(`CSVの列数が不正です。選択された機種（${spec.name}）は ${spec.expectedColumns} 列を想定していますが、ファイルには ${allRows[i].length} 列が含まれています。`);
         }
@@ -132,12 +178,12 @@ export async function parseCSVFile(file, spec, delimiter = ',') {
     /* ヘッダー行がない場合、機種仕様から仮想ヘッダーを生成し、全行をデータとして扱う */
     const header = spec.columns.map(col => col.label);
     const rows = allRows;
-    return { header, rows, encoding };
+    return { header, rows, encoding, detectedSpecId };
   } else {
     /* 1行目をヘッダーとして分離（デフォルト） */
     const header = allRows[0];
     const rows = allRows.slice(1);
-    return { header, rows, encoding };
+    return { header, rows, encoding, detectedSpecId };
   }
 }
 

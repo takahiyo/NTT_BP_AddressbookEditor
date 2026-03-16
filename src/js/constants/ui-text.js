@@ -101,6 +101,7 @@ export const UI_TEXT = {
     EMPTY_ROWS_DELETED: '空行を{count}件削除しました',
     GAIJI_SAVED: '外字設定を保存しました',
     NO_DATA: 'データがありません',
+    AUTO_DETECT_SWITCHED: '入力機種を {name} に自動切替しました',
 
 
   },

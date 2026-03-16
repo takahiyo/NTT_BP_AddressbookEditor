@@ -220,17 +220,46 @@ function handleImport() {
 
 /**
  * ファイルを読み込んでテーブルに表示
+ * 機種自動判別 → 必要に応じて入力機種を切替 → データ表示
  * @param {File} file - CSVファイル
  */
 async function loadFile(file) {
   log.info('ファイル読み込み開始', { name: file.name, size: file.size });
   try {
-    const { header, rows, encoding } = await parseCSVFile(file, state.inputSpec);
+    /* 初回パース（自動判別を含む） */
+    let result = await parseCSVFile(file, state.inputSpec);
+    let activeSpec = state.inputSpec;
+
+    /* 機種自動判別: 検出された機種が現在と異なれば切替 */
+    if (result.detectedSpecId && result.detectedSpecId !== state.inputSpec.id) {
+      const detectedSpec = getSpec(result.detectedSpecId);
+      if (detectedSpec) {
+        log.info('機種を自動判別して切替', { from: state.inputSpec.id, to: detectedSpec.id });
+
+        /* 入力機種を切替 */
+        state.inputSpec = detectedSpec;
+        activeSpec = detectedSpec;
+
+        /* UIセレクターを同期 */
+        const inputSelect = document.getElementById('input-model-select');
+        if (inputSelect) inputSelect.value = detectedSpec.id;
+
+        /* テーブルのカラム定義を更新 */
+        state.tableEditor.setSpec(detectedSpec);
+
+        /* 正しい機種仕様で再パース */
+        result = await parseCSVFile(file, detectedSpec);
+
+        showToast(formatText(UI_TEXT.TOAST.AUTO_DETECT_SWITCHED, { name: detectedSpec.name }), 'info');
+      }
+    }
+
+    const { header, rows, encoding } = result;
     state.csvHeader = header;
     state.detectedEncoding = encoding;
 
     /* カラム定義に基づいてデータをマッピング */
-    const data = mapRowsToObjects(rows, state.inputSpec.columns);
+    const data = mapRowsToObjects(rows, activeSpec.columns);
     state.tableEditor.setData(data);
     updateToolbarState(state.toolbarButtons, true);
     runValidation();
