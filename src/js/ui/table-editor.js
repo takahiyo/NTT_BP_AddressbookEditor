@@ -35,6 +35,7 @@ export class TableEditor {
     this._sortConfig = { key: null, order: 'asc' }; // asc or desc
     this._currentPage = 1;
     this._pageSize = 100;
+    this._mappingSpec = null; // 出力形式のマッピング用
   }
 
   /**
@@ -48,6 +49,15 @@ export class TableEditor {
     if (this._data.length === 0) {
       this._render();
     }
+  }
+
+  /**
+   * 出力機種仕様（マッピング用）を設定
+   * @param {Object} spec - 出力機種仕様
+   */
+  setMappingSpec(spec) {
+    this._mappingSpec = spec;
+    this._render();
   }
 
   /**
@@ -268,28 +278,43 @@ export class TableEditor {
   /** テーブルヘッダーを生成 */
   _renderHeader() {
     const thead = document.createElement('thead');
-    const tr = document.createElement('tr');
+    
+    /* 2列表示が必要か判定（入力と出力が異なる場合） */
+    const isMapping = this._mappingSpec && this._mappingSpec.id !== this._spec.id;
+    
+    /* 1行目（入力機種 or 通常ヘッダー） */
+    const tr1 = document.createElement('tr');
+    tr1.className = isMapping ? 'header-row--input' : '';
 
-    /* 選択チェックボックス列 */
+    /* 選択チェックボックス列 (RowSpan 2) */
     const thCheck = document.createElement('th');
     thCheck.className = 'col-rownum';
+    if (isMapping) thCheck.rowSpan = 2;
     const selectAll = document.createElement('input');
     selectAll.type = 'checkbox';
     selectAll.id = 'select-all-rows';
     selectAll.addEventListener('change', () => this._toggleSelectAll(selectAll.checked));
     thCheck.appendChild(selectAll);
-    tr.appendChild(thCheck);
+    tr1.appendChild(thCheck);
 
-    /* 行番号列 */
+    /* 行番号列 (RowSpan 2) */
     const thNum = document.createElement('th');
     thNum.className = 'col-rownum';
+    if (isMapping) thNum.rowSpan = 2;
     thNum.textContent = UI_TEXT.TABLE.ROW_NUM;
-    tr.appendChild(thNum);
+    tr1.appendChild(thNum);
+
+    /* 2行目（出力機種の対応カラム名） */
+    const tr2 = isMapping ? document.createElement('tr') : null;
+    if (tr2) tr2.className = 'header-row--output';
 
     /* データ列 */
     this._columns.forEach(col => {
+      const isDiscarded = isMapping && !this._mappingSpec.columns.some(targetCol => targetCol.key === col.key);
+
       const th = document.createElement('th');
       th.className = col.cssClass || '';
+      if (isDiscarded) th.classList.add('col--discarded');
       
       /* 列選択用チェックボックス */
       const colCheck = document.createElement('input');
@@ -322,10 +347,25 @@ export class TableEditor {
       if (constraint?.maxBytes) {
         th.title = `最大${constraint.maxBytes}バイト`;
       }
-      tr.appendChild(th);
+      tr1.appendChild(th);
+
+      /* 出力用ヘッダーセルの作成 */
+      if (tr2) {
+        const thSub = document.createElement('th');
+        thSub.className = col.cssClass || '';
+        if (isDiscarded) {
+          thSub.classList.add('col--discarded');
+          thSub.innerHTML = '<span class="header-discard-label">(破棄)</span>';
+        } else {
+          const targetCol = this._mappingSpec.columns.find(tc => tc.key === col.key);
+          thSub.textContent = targetCol ? targetCol.label : col.label;
+        }
+        tr2.appendChild(thSub);
+      }
     });
 
-    thead.appendChild(tr);
+    thead.appendChild(tr1);
+    if (tr2) thead.appendChild(tr2);
     this._tableEl.appendChild(thead);
   }
 
@@ -422,6 +462,20 @@ export class TableEditor {
     const tr = document.createElement('tr');
     tr.dataset.rowIndex = rowIndex;
 
+    /* 行破棄ハイライト（システム容量超過） */
+    if (this._mappingSpec && this._mappingSpec.systemCapacity) {
+      /* TODO: systemCapacity の構造に合わせた厳密な判定が必要だが、
+       * 現状の簡易実装として容量を超えている場合にハイライト */
+       // A1等の単一機種の場合は1つ目を使用
+      const capacities = Object.values(this._mappingSpec.systemCapacity)[0];
+      const maxRows = capacities ? (capacities[APP_CONFIG.DEFAULT_DIGIT_MODE] || Object.values(capacities)[0]) : 99999;
+      
+      if (rowIndex >= maxRows) {
+        tr.classList.add('row--discarded');
+        tr.title = `出力機種の容量（${maxRows}件）を超えているため、書き出し時に破棄されます`;
+      }
+    }
+
     /* チェックボックス */
     const tdCheck = document.createElement('td');
     tdCheck.className = 'col-rownum';
@@ -446,8 +500,12 @@ export class TableEditor {
 
     /* データセル */
     this._columns.forEach(col => {
+      const isDiscarded = this._mappingSpec && this._mappingSpec.id !== this._spec.id && 
+                          !this._mappingSpec.columns.some(targetCol => targetCol.key === col.key);
+
       const td = document.createElement('td');
       td.className = col.cssClass || '';
+      if (isDiscarded) td.classList.add('col--discarded');
       td.dataset.fieldKey = col.key;
 
       const input = document.createElement('input');

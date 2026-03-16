@@ -59,15 +59,40 @@
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
   font-weight: 600;
-  text-align: center; /* 中央寄せに変更 */
+  text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-bottom: 2px solid var(--color-accent-primary);
-  white-space: normal; /* 折り返しを許可 */
+  border-bottom: 1px solid var(--table-border-color);
+  border-right: 1px solid var(--table-border-color);
+  white-space: normal;
   word-break: break-all;
-  vertical-align: top; /* 上端揃え */
+  vertical-align: middle; /* 中央揃え */
   user-select: none;
   min-height: 48px;
+}
+
+/* 2列ヘッダーの下側の境界線 */
+.data-table thead tr:last-child th {
+  border-bottom: 2px solid var(--color-accent-primary);
+}
+
+/* 入力・出力ラベルの区別 */
+.header-row--input {
+  background: var(--table-header-bg);
+  opacity: 0.9;
+}
+
+.header-row--output {
+  background: var(--color-bg-tertiary);
+  font-style: italic;
+  color: var(--color-accent-primary);
+}
+
+.col-label-sub {
+  display: block;
+  font-size: 0.65rem;
+  margin-top: 2px;
+  color: var(--color-text-muted);
 }
 
 .data-table th .col-selector {
@@ -165,6 +190,30 @@ tr.row--empty-phone {
 
 tr.row--empty-phone td.col-rownum {
   color: var(--color-warning);
+}
+
+/* === 破棄される行列（機種変換時） === */
+.row--discarded {
+  background-color: rgba(248, 113, 113, 0.08) !important;
+}
+
+.col--discarded {
+  background-color: rgba(248, 113, 113, 0.05) !important;
+}
+
+.col--discarded .cell-input {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.col--discarded.data-table th {
+  color: var(--color-error);
+}
+
+.header-discard-label {
+  color: var(--color-error);
+  font-weight: bold;
 }
 
 /* === バイトカウント表示 === */

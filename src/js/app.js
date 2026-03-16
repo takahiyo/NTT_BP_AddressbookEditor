@@ -128,6 +128,7 @@ function initSpecs() {
   outputSelect.addEventListener('change', () => {
     state.outputSpec = getSpec(outputSelect.value);
     log.info('出力機種を変更', { specId: state.outputSpec?.id });
+    state.tableEditor.setMappingSpec(state.outputSpec);
   });
 
   digitSelect.addEventListener('change', () => {
@@ -141,6 +142,7 @@ function initTableEditor() {
   const container = document.getElementById('table-container');
   state.tableEditor = new TableEditor(container, onCellChange);
   state.tableEditor.setSpec(state.inputSpec);
+  state.tableEditor.setMappingSpec(state.outputSpec);
 }
 
 /** ツールバーの初期化 */
