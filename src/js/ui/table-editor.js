@@ -525,16 +525,17 @@ export class TableEditor {
         this._data[rowIndex][col.key] = value;
         this._updateByteCount(td, col.key, value);
 
-          /* 電話番号入力時にアイコンと属性を自動設定・補正 (1) */
-        if (col.type === 'phone' && value.trim().length > 0) {
+        /* 電話番号入力時にアイコンと属性を自動設定 (1) */
+        if (col.type === 'phone') {
           const index = col.key.replace('phone', '');
           const iconKey = `icon${index}`;
           const dialAttrKey = `dialAttr${index}`;
 
           const currentIcon = this._data[rowIndex][iconKey];
           const currentDialAttr = this._data[rowIndex][dialAttrKey];
+          const hasPhoneInput = value.trim().length > 0;
 
-          /* アイコン番号の範囲チェック (1-8のみ有効) */
+          /* アイコン番号の範囲チェック (1-8) */
           let isValidIcon = false;
           if (currentIcon !== undefined && currentIcon !== null && currentIcon !== '') {
             const numIcon = parseInt(currentIcon, 10);
@@ -542,12 +543,8 @@ export class TableEditor {
               isValidIcon = true;
             }
           }
-          if (!isValidIcon) {
-            console.log(`[TableEditor] アイコン番号補正: ${currentIcon} -> 1`);
-            this._updateCellValue(rowIndex, iconKey, '1');
-          }
 
-          /* 発信番号属性の範囲チェック (1-2のみ有効) */
+          /* 発信番号属性の範囲チェック (1-2) */
           let isValidDialAttr = false;
           if (currentDialAttr !== undefined && currentDialAttr !== null && currentDialAttr !== '') {
             const numDialAttr = parseInt(currentDialAttr, 10);
@@ -555,8 +552,18 @@ export class TableEditor {
               isValidDialAttr = true;
             }
           }
-          if (!isValidDialAttr) {
-            console.log(`[TableEditor] 発信属性補正: ${currentDialAttr} -> 1`);
+
+          if (hasPhoneInput) {
+            /* 電話番号あり: どちらかでも無効値(空含む)なら、両方初期値1をセット */
+            if (!isValidIcon || !isValidDialAttr) {
+              console.log(`[TableEditor] 電話あり+無効値: Icon(${currentIcon}->1), DialAttr(${currentDialAttr}->1)`);
+              this._updateCellValue(rowIndex, iconKey, '1');
+              this._updateCellValue(rowIndex, dialAttrKey, '1');
+            }
+          } else {
+            /* 電話番号空: 常に初期値1にリセット */
+            console.log(`[TableEditor] 電話なし: Icon(${currentIcon}->1), DialAttr(${currentDialAttr}->1)`);
+            this._updateCellValue(rowIndex, iconKey, '1');
             this._updateCellValue(rowIndex, dialAttrKey, '1');
           }
         }
