@@ -11,7 +11,7 @@ import { buildCSVText, objectsToRows, downloadCSV, generateFilename } from './se
 import { validateAll } from './services/validator.js';
 import {
   toHalfWidth, toFullWidth, removeSymbols,
-  truncateField, deleteEmptyPhoneRows,
+  truncateField, deleteEmptyPhoneRows, normalizePhoneInconsistencies,
 } from './services/converter.js';
 import { convertBetweenModels } from './services/model-converter.js';
 import { TableEditor } from './ui/table-editor.js';
@@ -261,7 +261,18 @@ async function loadFile(file) {
     state.detectedEncoding = encoding;
 
     /* カラム定義に基づいてデータをマッピング */
-    const data = mapRowsToObjects(rows, activeSpec.columns);
+    let data = mapRowsToObjects(rows, activeSpec.columns);
+
+    /* 電話番号とアイコン・属性の不整合をチェック */
+    const { data: normalizedData, changedCount } = normalizePhoneInconsistencies(data, activeSpec.phoneNumberSlots);
+    if (changedCount > 0) {
+      const ok = await confirmDialog(formatText(UI_TEXT.MODAL.CONFIRM_NORMALIZE_PHONE, { count: changedCount }));
+      if (ok) {
+        data = normalizedData;
+        log.info('インポート時に不整合を補正', { count: changedCount });
+      }
+    }
+
     state.tableEditor.setData(data);
     updateToolbarState(state.toolbarButtons, true);
     runValidation();

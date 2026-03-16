@@ -188,3 +188,57 @@ export function deleteEmptyPhoneRows(data, phoneSlots) {
   });
   return { data: filtered, deletedCount: before - filtered.length };
 }
+
+/**
+ * 電話番号とアイコン・属性の不整合を一括補正
+ * @param {Array<Object>} data - 全行データ
+ * @param {number} phoneSlots - 電話番号スロット数
+ * @returns {{ data: Array<Object>, changedCount: number }}
+ */
+export function normalizePhoneInconsistencies(data, phoneSlots) {
+  let changedCount = 0;
+  const newData = data.map(row => {
+    let rowChanged = false;
+    const newRow = { ...row };
+
+    for (let i = 1; i <= phoneSlots; i++) {
+      const pKey = `phone${i}`;
+      const iKey = `icon${i}`;
+      const dKey = `dialAttr${i}`;
+
+      const phone = (row[pKey] || '').trim();
+      const icon = row[iKey];
+      const dialAttr = row[dKey];
+
+      const hasPhone = phone.length > 0;
+
+      /* アイコン・属性の妥当性チェック */
+      const numIcon = parseInt(icon, 10);
+      const isValidIcon = icon && !isNaN(numIcon) && numIcon >= 1 && numIcon <= 8;
+      
+      const numDialAttr = parseInt(dialAttr, 10);
+      const isValidDialAttr = dialAttr && !isNaN(numDialAttr) && numDialAttr >= 1 && numDialAttr <= 2;
+
+      if (hasPhone) {
+        /* 電話番号あり: いずれかが不正なら両方1に */
+        if (!isValidIcon || !isValidDialAttr) {
+          newRow[iKey] = '1';
+          newRow[dKey] = '1';
+          rowChanged = true;
+        }
+      } else {
+        /* 電話番号なし: いずれかがデフォルト(1)以外なら両方1に */
+        if (icon !== '1' || dialAttr !== '1') {
+          newRow[iKey] = '1';
+          newRow[dKey] = '1';
+          rowChanged = true;
+        }
+      }
+    }
+
+    if (rowChanged) changedCount++;
+    return newRow;
+  });
+
+  return { data: newData, changedCount };
+}

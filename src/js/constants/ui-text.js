@@ -82,6 +82,7 @@ export const UI_TEXT = {
 
     CONFIRM_DELETE: '選択した{count}行を削除してよろしいですか？',
     CONFIRM_TRUNCATE: '超過文字を一括カットします。よろしいですか？',
+    CONFIRM_NORMALIZE_PHONE: '電話番号とアイコン・発信属性の不整合が {count} 件見つかりました。\nこれらを初期値(1)に補正して読み込みますか？\n（[キャンセル] を選ぶとそのまま読み込みます）',
     FURIGANA_REVIEW_TITLE: 'フリガナ生成の確認',
     FURIGANA_REVIEW_DESC: '生成されたフリガナを確認してください。チェックを入れると上書きします。',
     FURIGANA_COL_NAME: '名称',
