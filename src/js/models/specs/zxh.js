@@ -59,16 +59,14 @@ export const ZXH_SPEC = defineSpec({
     '2digit': {
       label: '2桁',
       shared:   { min: 0,    max: 79,   count: 80 },
-      personal: { min: 80,   max: 99,   count: 20 },
     },
     '3digit': {
       label: '3桁（初期値）',
       shared:   { min: 0,    max: 799,  count: 800 },
-      personal: { min: 800,  max: 999,  count: 200 },
     },
   },
 
   systemCapacity: {
-    typeH: { '2digit': 100, '3digit': 1000 },
+    typeH: { '2digit': 80, '3digit': 800 },
   },
 }, items);
