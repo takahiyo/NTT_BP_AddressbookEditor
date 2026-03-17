@@ -22,9 +22,16 @@ export function buildCSVText(header, rows, delimiter = ',', spec = {}) {
    * カンマ、引用符、改行を含む場合、あるいは仕様で強制的に引用符で囲む列の場合は引用符で囲む
    */
   const escapeField = (field, colIndex) => {
-    const str = field == null ? '' : String(field);
+    let str = field == null ? '' : String(field);
     const colKey = spec.columns ? spec.columns[colIndex]?.key : null;
-    const forceQuote = colKey && forceQuoteCols.includes(colKey);
+    
+    /* トリプルクォート対応（値を引用符で囲み、CSVエスケープでさらに囲むことで """値""" にする） */
+    const isTriple = colKey && spec.tripleQuoteColumns?.includes(colKey);
+    if (isTriple) {
+      str = '"' + str + '"';
+    }
+
+    const forceQuote = colKey && (spec.forceQuoteColumns?.includes(colKey) || isTriple);
 
     if (forceQuote || str.includes(delimiter) || str.includes('"') || str.includes('\n') || str.includes('\r')) {
       return '"' + str.replace(/"/g, '""') + '"';
@@ -40,20 +47,20 @@ export function buildCSVText(header, rows, delimiter = ',', spec = {}) {
   
   /* データ行 */
   rows.forEach(row => {
-    let outputRow = row;
+    const escapedFields = row.map((field, idx) => escapeField(field, idx));
+    
     /* ZX-L 等、メモリ番号をCSVに含めない機種の対応 */
     if (spec.skipMemoryNoInCSV) {
       const memoryNoIdx = spec.columns.findIndex(col => col.key === 'memoryNo');
       if (memoryNoIdx === -1) {
-          /* モデル定義自体に memoryNo がない場合は、全カラム出力 */
-          lines.push(row.map((field, idx) => escapeField(field, idx)).join(delimiter));
+          lines.push(escapedFields.join(delimiter));
       } else {
-          /* memoryNo 以外のカラムを抽出して出力 (ZX-L は memoryNo を UI 管理用に保持するが CSV にはない) */
-          const filteredRow = row.filter((_, idx) => idx !== memoryNoIdx);
-          lines.push(filteredRow.map((field, idx) => escapeField(field, idx)).join(delimiter));
+          /* memoryNo を除外して結合 */
+          const filteredRow = escapedFields.filter((_, idx) => idx !== memoryNoIdx);
+          lines.push(filteredRow.join(delimiter));
       }
     } else {
-      lines.push(row.map((field, idx) => escapeField(field, idx)).join(delimiter));
+      lines.push(escapedFields.join(delimiter));
     }
   });
 

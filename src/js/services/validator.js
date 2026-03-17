@@ -215,9 +215,23 @@ export function validateRow(rowData, spec, gaijiChars = new Set()) {
     const iconKey = `icon${i}`;
     const iconVal = rowData[iconKey];
     const iconNum = parseInt(iconVal, 10);
-    if (isNaN(iconNum) || iconNum < iconRange.min || iconNum > iconRange.max) {
+    
+    let isIconInvalid = false;
+    let iconErrorMsg = '';
+    
+    if (iconRange.allowed) {
+      if (!iconRange.allowed.includes(iconNum)) {
+        isIconInvalid = true;
+        iconErrorMsg = `アイコン番号は以下のいずれかを指定してください: ${iconRange.allowed.join(', ')}`;
+      }
+    } else if (isNaN(iconNum) || iconNum < iconRange.min || iconNum > iconRange.max) {
+      isIconInvalid = true;
+      iconErrorMsg = `アイコン番号は${iconRange.min}-${iconRange.max}の範囲で指定してください`;
+    }
+
+    if (isIconInvalid) {
       if (!results[iconKey]) results[iconKey] = [];
-      results[iconKey].push(createResult(SEVERITY.ERROR, `アイコン番号は${iconRange.min}-${iconRange.max}の範囲で指定してください`));
+      results[iconKey].push(createResult(SEVERITY.ERROR, iconErrorMsg));
     }
 
     if (phoneVal && phoneVal.trim().length > 0) {

@@ -83,7 +83,7 @@ export const UI_TEXT = {
     CONFIRM_DELETE: '選択した{count}行を削除してよろしいですか？',
     CONFIRM_TRUNCATE: '超過文字を一括カットします。よろしいですか？',
     CONFIRM_NORMALIZE_PHONE: '電話番号とアイコン・発信属性の不整合が {count} 件見つかりました。\nこれらを初期値(1)に補正して読み込みますか？\n（[キャンセル] を選ぶとそのまま読み込みます）',
-    CONFIRM_PAD_A1: 'A1の出力には20000行のデータが必要です。\n現在 {current} 行のため、不足分を初期値と連番で自動補填しますか？\n（[キャンセル] すると出力機種の変更を中止します）',
+    CONFIRM_PAD_CAPACITY: '{name}の出力には{target}行のデータが必要です。\n現在 {current} 行のため、不足分を初期値と連番で自動補填しますか？\n（[キャンセル] すると出力機種の変更を中止します）',
     EXPORT_WARNING_EMPTY_ROWS: '空行があると {modelName} では読み込み時にエラーが出ますが、このまま書き出してもよろしいですか？',
     FURIGANA_REVIEW_TITLE: 'フリガナ生成の確認',
     FURIGANA_REVIEW_DESC: '生成されたフリガナを確認してください。チェックを入れると上書きします。',

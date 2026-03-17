@@ -37,15 +37,15 @@ export const ZXL_SPEC = defineSpec({
   hasHeader: false,       // ヘッダーなし
   requirePhoneNumber: true,
   
-  /* 引用符の扱い: 名称、フリガナ、電話番号を強制引用符対象とする */
-  forceQuoteColumns: [
+  /* 引用符の扱い: 名称、フリガナ、電話番号をトリプル引用符対象とする */
+  tripleQuoteColumns: [
     'name', 'furigana', 
     'phone1', 'phone2', 'phone3', 'phone4'
   ],
 
-  /* アイコン・属性の範囲定義（必要に応じてバリデーションで使用） */
-  iconRange: { min: 0, max: 99 },
-  dialAttrRange: { min: 0, max: 9 },
+  /* アイコン・属性の範囲定義 */
+  iconRange: { allowed: [16, 17, 20, 21, 24, 25, 28, 52, 23] },
+  dialAttrRange: { min: 0, max: 2 },
 
   /* ZX-L はメモリ番号列がデータとして無意味（行番号-1）だが、
      UI上での管理のために仮想的に扱う。
@@ -55,11 +55,11 @@ export const ZXL_SPEC = defineSpec({
   digitModes: {
     '4digit': {
       label: '4桁',
-      shared:   { min: 0,    max: 9999, count: 10000 },
+      shared:   { min: 0,    max: 19799, count: 19800 },
     },
   },
 
   systemCapacity: {
-    typeL: { '4digit': 10000 },
+    typeL: { '4digit': 19800 },
   },
 }, items);

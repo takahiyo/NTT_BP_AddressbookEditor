@@ -137,18 +137,22 @@ function initSpecs() {
       result.warnings.forEach(w => showToast(w, 'info'));
     }
 
-    /* --- 2. A1向けパディング処理（変換後のレイアウトに基づく） --- */
-    if (newSpec.id === 'a1') {
+    /* --- 2. 特定機種向けパディング処理（変換後のレイアウトに基づく） --- */
+    if (newSpec.id === 'a1' || newSpec.id === 'zxl') {
+      const targetCount = newSpec.id === 'a1' ? 20000 : 19800;
       const currentCount = convertedData.length;
-      const targetCount = 20000;
 
       if (currentCount > 0 && currentCount < targetCount) {
-        const msg = formatText(UI_TEXT.MODAL.CONFIRM_PAD_A1, { current: currentCount });
+        const msg = formatText(UI_TEXT.MODAL.CONFIRM_PAD_CAPACITY, { 
+          name: newSpec.name, 
+          target: targetCount, 
+          current: currentCount 
+        });
         const ok = await confirmDialog(msg);
 
         if (ok) {
-          log.info('A1データパディングを実行', { current: currentCount, target: targetCount });
-          /* A1のデフォルト桁数モードを取得してパディング */
+          log.info(`${newSpec.name}データパディングを実行`, { current: currentCount, target: targetCount });
+          /* デフォルト桁数モードを取得してパディング */
           const defaultDigitMode = newSpec.digitModes ? Object.keys(newSpec.digitModes)[0] : APP_CONFIG.DEFAULT_DIGIT_MODE;
           convertedData = padDataToCapacity(convertedData, targetCount, newSpec, defaultDigitMode);
         } else {
@@ -414,6 +418,29 @@ async function handleExport() {
     const result = convertBetweenModels(data, state.inputSpec, state.outputSpec);
     exportData = result.data;
     result.warnings.forEach(w => showToast(w, 'info'));
+  }
+
+  /* 行数不足のチェック（A1: 20000, ZX-L: 19800） */
+  if (exportSpec.id === 'a1' || exportSpec.id === 'zxl') {
+    const targetCount = exportSpec.id === 'a1' ? 20000 : 19800;
+    if (exportData.length < targetCount) {
+      const msg = formatText(UI_TEXT.MODAL.CONFIRM_PAD_CAPACITY, { 
+        name: exportSpec.name, 
+        target: targetCount, 
+        current: exportData.length 
+      });
+      const ok = await confirmDialog(msg);
+      if (ok) {
+        log.info(`${exportSpec.name}エクスポート前にパディングを実行`, { target: targetCount });
+        const defaultDigitMode = exportSpec.digitModes ? Object.keys(exportSpec.digitModes)[0] : APP_CONFIG.DEFAULT_DIGIT_MODE;
+        exportData = padDataToCapacity(exportData, targetCount, exportSpec, defaultDigitMode);
+        /* アプリの状態も更新しておく（次回のために） */
+        state.tableEditor.setData(exportData);
+      } else {
+        log.info('パディングがキャンセルされたためエクスポートを中止');
+        return;
+      }
+    }
   }
 
   /* 書出前の機種固有警告チェック */
