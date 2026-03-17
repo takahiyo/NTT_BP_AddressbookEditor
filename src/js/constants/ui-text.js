@@ -38,8 +38,8 @@ export const UI_TEXT = {
     AUTO_ASSIGN_MEMORY: 'メモリ採番',
     PHONE_PROCESS: '電話番号加工',
     GENERATE_FURIGANA: 'フリガナ生成',
-    MAPPING_MASTER_ONOFF: '個別指定有効',
-    EDIT_MAPPING_DICTIONARY: '個別指定辞書...',
+    MAPPING_MASTER_ONOFF: 'フリガナ辞書',
+    EDIT_MAPPING_DICTIONARY: '辞書を編集...',
     NORMALIZE_ICONS: 'アイコン正規化',
   },
 

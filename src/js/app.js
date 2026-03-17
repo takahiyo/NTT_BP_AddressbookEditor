@@ -733,7 +733,7 @@ async function handleFurigana() {
 function handleFuriganaMappingMasterToggle(enabled) {
   furiganaMappingService.setMasterEnabled(enabled);
   log.info('フリガナ辞書機能を切替', { enabled });
-  showToast(`フリガナ個別指定を${enabled ? 'ON' : 'OFF'}にしました`, 'info');
+  showToast(`フリガナ辞書を${enabled ? 'ON' : 'OFF'}にしました`, 'info');
 }
 
 /** フリガナ：辞書編集モーダルを表示 */

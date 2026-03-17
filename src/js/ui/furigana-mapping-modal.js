@@ -87,7 +87,7 @@ export function showFuriganaMappingEditor() {
     container.appendChild(tableWrapper);
 
     const { close } = showModal({
-      title: 'フリガナ個別指定辞書',
+      title: 'フリガナ辞書',
       content: container,
       buttons: [
         {
