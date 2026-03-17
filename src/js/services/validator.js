@@ -117,13 +117,14 @@ export function validatePhoneChars(value) {
 }
 
 /**
- * 行全体のバリデーション（電話番号空チェック含む）
- * @param {Object} rowData - 行データ（キー付きオブジェクト）
+ * 行全体のバリデーション
+ * @param {Object} rowData - 行データ
  * @param {Object} spec - 機種仕様
- * @param {Set} gaijiChars - 外字（使用不可文字）のセット
- * @returns {Object} { fieldKey: [ValidationResult, ...], _rowErrors: [...] }
+ * @param {Set} gaijiChars - 外字セット
+ * @param {string} selectedDigitMode - 現在の桁数モード (例: '2digit', '3digit')
+ * @returns {Object} 結果
  */
-export function validateRow(rowData, spec, gaijiChars = new Set()) {
+export function validateRow(rowData, spec, gaijiChars = new Set(), selectedDigitMode = '3digit') {
   const results = {};
 
   /* === フィールドごとの検証 === */
@@ -191,11 +192,32 @@ export function validateRow(rowData, spec, gaijiChars = new Set()) {
   if (spec.tenRange) {
     const tenVal = rowData.ten;
     const tenNum = parseInt(tenVal, 10);
-    if (!isNaN(tenNum)) {
-      if (tenNum < spec.tenRange.min || tenNum > spec.tenRange.max) {
+    if (tenVal !== undefined && tenVal !== '') {
+      if (isNaN(tenNum) || tenNum < spec.tenRange.min || tenNum > spec.tenRange.max) {
         if (!results.ten) results.ten = [];
         results.ten.push(createResult(SEVERITY.ERROR, `TEN番号は${spec.tenRange.min}-${spec.tenRange.max}の範囲で指定してください`));
       }
+    } else if (spec.requireTen) {
+        /* TEN必須チェック */
+        if (!results.ten) results.ten = [];
+        results.ten.push(createResult(SEVERITY.ERROR, 'TEN番号を入力してください（実機でエラーになります）'));
+    }
+  }
+
+  /* メモリ番号の範囲チェック */
+  const memoryNoVal = rowData.memoryNo;
+  const modeSpec = spec.digitModes?.[selectedDigitMode];
+  if (memoryNoVal !== undefined && memoryNoVal !== '' && modeSpec) {
+    const memNum = parseInt(memoryNoVal, 10);
+    const ranges = [];
+    if (modeSpec.shared) ranges.push(modeSpec.shared);
+    if (modeSpec.personal) ranges.push(modeSpec.personal);
+
+    const isValid = ranges.some(r => memNum >= r.min && memNum <= r.max);
+    if (!isValid) {
+      if (!results.memoryNo) results.memoryNo = [];
+      const rangeText = ranges.map(r => `${r.min}-${r.max}`).join(', ');
+      results.memoryNo.push(createResult(SEVERITY.ERROR, `メモリ番号は範囲内 (${rangeText}) で入力してください`));
     }
   }
 
@@ -269,16 +291,17 @@ export function validateRow(rowData, spec, gaijiChars = new Set()) {
  * @param {Array<Object>} data - 全行データ
  * @param {Object} spec - 機種仕様
  * @param {Set} gaijiChars - 外字セット
+ * @param {string} selectedDigitMode - 現在の桁数モード
  * @returns {{ results: Array<Object>, errorCount: number, warningCount: number }}
  */
-export function validateAll(data, spec, gaijiChars = new Set()) {
+export function validateAll(data, spec, gaijiChars = new Set(), selectedDigitMode = '3digit') {
   let errorCount = 0;
   let warningCount = 0;
 
   const memoryNos = new Map(); // value -> Array of indices
 
   const results = data.map((row, index) => {
-    const rowResult = validateRow(row, spec, gaijiChars);
+    const rowResult = validateRow(row, spec, gaijiChars, selectedDigitMode);
 
     /* メモリ番号の収集 */
     const memNo = row.memoryNo;

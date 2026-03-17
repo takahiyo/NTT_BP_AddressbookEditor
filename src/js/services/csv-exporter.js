@@ -77,6 +77,11 @@ export function objectsToRows(dataObjects, columns, spec = {}) {
       
       let str = String(val);
       
+      /* 機種仕様による自動補完: TEN必須機種で空の場合は'0'にする */
+      if (col.key === 'ten' && spec.requireTen && (val == null || str.trim() === '')) {
+        str = '0';
+      }
+
       /* 機種仕様による自動正規化 (エクスポート直前) */
       const constraint = spec.fieldConstraints ? spec.fieldConstraints[col.key] : null;
       if (constraint && constraint.charType === 'halfKana') {

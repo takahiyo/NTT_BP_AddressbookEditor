@@ -34,6 +34,7 @@ export const ZXH_SPEC = defineSpec({
   phoneNumberSlots: PHONE_SLOTS,
   headerColumns: 17,
   requirePhoneNumber: true,
+  requireTen: true,
 
   /* TEN番号の範囲 (0-8) */
   tenRange: { min: 0, max: 8 },

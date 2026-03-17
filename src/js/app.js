@@ -531,7 +531,7 @@ function runValidation() {
   const data = state.tableEditor.getData();
   if (!data || data.length === 0) return;
 
-  state.lastValidation = validateAll(data, state.inputSpec, state.gaijiChars);
+  state.lastValidation = validateAll(data, state.inputSpec, state.gaijiChars, state.digitMode);
   state.tableEditor.setValidationResults(state.lastValidation.results);
   updateStatusBar();
 }
