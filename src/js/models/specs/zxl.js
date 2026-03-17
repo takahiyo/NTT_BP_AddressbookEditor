@@ -43,6 +43,9 @@ export const ZXL_SPEC = defineSpec({
     'phone1', 'phone2', 'phone3', 'phone4'
   ],
 
+  /* TEN番号の範囲 (0-576) */
+  tenRange: { min: 0, max: 576 },
+
   /* アイコン・属性の範囲定義 */
   iconRange: { 
     /* 記載順が他機種のアイコン番号 1-9 と対応する */

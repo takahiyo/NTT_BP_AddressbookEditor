@@ -36,6 +36,10 @@ export const A1_SPEC = defineSpec({
   requirePhoneNumber: true,
   forbiddenChars: ['&', '<', '>', '"', "'", ','],
   forceQuoteColumns: ['name', 'furigana', 'phone1', 'phone2', 'dialInContent'], // 出力時に"で囲む列
+  
+  /* TEN番号の範囲 (0-1152) */
+  tenRange: { min: 0, max: 1152 },
+
   iconRange: { min: 1, max: 9 },      // アイコン番号は1-9
   dialAttrRange: { min: 0, max: 2 },  // 発信属性は0-2
 

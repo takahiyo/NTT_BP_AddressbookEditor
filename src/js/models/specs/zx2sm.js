@@ -30,9 +30,13 @@ export const ZX2SM_SPEC = defineSpec({
   encoding: 'Shift_JIS',
   inputEncodings: ['Shift_JIS', 'UTF-8', 'UTF-16'],
   phoneNumberSlots: PHONE_SLOTS,
+  /* 1行目をヘッダーとして扱う */
   headerColumns: 17,
   requirePhoneNumber: true,
   
+  /* TEN番号の範囲 (0-40) */
+  tenRange: { min: 0, max: 40 },
+
   /* アイコン番号の範囲 (1-8) */
   iconRange: { min: 1, max: 8 },
   

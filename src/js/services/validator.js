@@ -185,7 +185,21 @@ export function validateRow(rowData, spec, gaijiChars = new Set()) {
     }
   });
 
-  /* === 行レベルの検証 === */
+  /* === 行レベルの個別バリデーション === */
+  
+  /* TEN番号の範囲チェック */
+  if (spec.tenRange) {
+    const tenVal = rowData.ten;
+    const tenNum = parseInt(tenVal, 10);
+    if (!isNaN(tenNum)) {
+      if (tenNum < spec.tenRange.min || tenNum > spec.tenRange.max) {
+        if (!results.ten) results.ten = [];
+        results.ten.push(createResult(SEVERITY.ERROR, `TEN番号は${spec.tenRange.min}-${spec.tenRange.max}の範囲で指定してください`));
+      }
+    }
+  }
+
+  /* === 行レベルの全体検証 === */
   const rowErrors = [];
 
   /* 電話番号空チェック */

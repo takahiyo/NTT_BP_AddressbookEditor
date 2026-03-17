@@ -35,6 +35,9 @@ export const ZXH_SPEC = defineSpec({
   headerColumns: 17,
   requirePhoneNumber: true,
 
+  /* TEN番号の範囲 (0-8) */
+  tenRange: { min: 0, max: 8 },
+
   /* アイコン番号の範囲 (1-8) */
   iconRange: { min: 1, max: 8 },
 
