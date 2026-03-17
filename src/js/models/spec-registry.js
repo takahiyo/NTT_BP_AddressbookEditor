@@ -7,6 +7,7 @@
 import { ZX2SM_SPEC } from './specs/zx2sm.js';
 import { A1_SPEC } from './specs/a1.js';
 import { ZXL_SPEC } from './specs/zxl.js';
+import { ZXH_SPEC } from './specs/zxh.js';
 
 /** 登録済み機種仕様のMap */
 const specRegistry = new Map();
@@ -27,6 +28,7 @@ function register(spec) {
 register(ZX2SM_SPEC);
 register(A1_SPEC);
 register(ZXL_SPEC);
+register(ZXH_SPEC);
 /* 新機種追加例:
  * import { TYPEL_SPEC } from './specs/typel.js';
  * register(TYPEL_SPEC);

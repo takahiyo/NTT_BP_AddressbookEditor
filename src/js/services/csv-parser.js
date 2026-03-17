@@ -126,7 +126,15 @@ export function detectSpecFromCSV(bytes) {
             return spec.id;
         }
         if (spec.hasHeader !== false && isHeaderRow) {
-            /* ヘッダーあり機種の条件に一致 */
+            /* ヘッダーあり機種: シグネチャがあればそれもチェック（ZXH vs ZX2SM） */
+            if (spec.headerSignature) {
+                if (firstLine.includes(spec.headerSignature)) {
+                    return spec.id;
+                }
+                /* シグネチャが合わない場合は次へ */
+                continue;
+            }
+            /* シグネチャ指定がない機種、またはシグネチャが特に必要ない場合は一致とみなす */
             return spec.id;
         }
     }

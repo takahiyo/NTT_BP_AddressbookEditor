@@ -115,15 +115,31 @@ function initSpecs() {
 
   /* 変更イベント */
   inputSelect.addEventListener('change', () => {
-    state.inputSpec = getSpec(inputSelect.value);
-    log.info('入力機種を変更', { specId: state.inputSpec?.id });
+    const newSpec = getSpec(inputSelect.value);
+    const oldSpec = state.inputSpec;
+    log.info('入力機種を変更', { from: oldSpec?.id, to: newSpec?.id });
     
-    // 現在のデータをクリア（カラム構造が変わるため）
-    // ※今後、データ変換処理を挟む場合は別途検討
-    state.tableEditor.setSpec(state.inputSpec);
-    state.tableEditor.setData([]);
-    updateToolbarState(state.toolbarButtons, false);
+    const currentData = state.tableEditor.getData();
+    let convertedData = currentData;
+
+    /* データを維持してカラム構造を変換 */
+    if (currentData.length > 0 && oldSpec.id !== newSpec.id) {
+      const result = convertBetweenModels(currentData, oldSpec, newSpec);
+      convertedData = result.data;
+      result.warnings.forEach(w => showToast(w, 'info'));
+    }
+
+    state.inputSpec = newSpec;
+    state.tableEditor.setSpec(newSpec);
+    state.tableEditor.setData(convertedData);
     
+    /* 入力機種に合わせて出力機種・桁数モードも更新（従来通り一貫性を保つ） */
+    state.outputSpec = newSpec;
+    outputSelect.value = newSpec.id;
+    updateDigitModeSelect(newSpec);
+    state.tableEditor.setMappingSpec(newSpec);
+
+    updateToolbarState(state.toolbarButtons, convertedData.length > 0);
     runValidation();
     updateStatusBar();
   });
