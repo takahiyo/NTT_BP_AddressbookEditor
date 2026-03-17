@@ -58,8 +58,19 @@ export function convertBetweenModels(data, sourceSpec, targetSpec) {
       const defaultValue = fieldInfo.defaultValue;
 
       if (sourceVal !== undefined && sourceVal !== '') {
-        /* マッピング元に値があればそれを採用 */
-        newRow[col.key] = sourceVal;
+        /* マッピング元の値がある場合 */
+        let finalVal = sourceVal;
+
+        /* アイコン番号の変換ロジック（ターゲットが特定の数値セットを持つ場合、例えばZX-L） */
+        if (col.key.startsWith('icon') && targetSpec.iconRange?.allowed) {
+          const sourceIconNum = parseInt(sourceVal, 10);
+          /* 元のアイコン番号が1-Nの範囲内であれば、ターゲットのallowedリストのN番目の値を採用 */
+          if (!isNaN(sourceIconNum) && sourceIconNum >= 1 && sourceIconNum <= targetSpec.iconRange.allowed.length) {
+            finalVal = targetSpec.iconRange.allowed[sourceIconNum - 1].toString();
+          }
+        }
+        
+        newRow[col.key] = finalVal;
       } else if (defaultValue !== undefined && defaultValue !== '') {
         /* マッピング元が空（または存在しない）かつ、変換先にデフォルト値があれば採用 */
         newRow[col.key] = defaultValue;

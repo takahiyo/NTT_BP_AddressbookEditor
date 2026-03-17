@@ -18,8 +18,8 @@ const items = [
 for (let i = 1; i <= PHONE_SLOTS; i++) {
   items.push(
     { key: `phone${i}`,     label: `電話番号 ${i}`,   type: 'phone', width: 'col-phone',     constraints: { maxBytes: 32, unit: 'byte', onOverflow: 'autoCut', onInvalidChar: 'error' } },
-    { key: `icon${i}`,      label: `アイコン ${i}`,   type: 'text',  width: 'col-icon' },
-    { key: `dialAttr${i}`,  label: `発信属性 ${i}`,   type: 'text',  width: 'col-dial-attr' }
+    { key: `icon${i}`,      label: `アイコン ${i}`,   type: 'number', width: 'col-icon',     defaultValue: '1' },
+    { key: `dialAttr${i}`,  label: `発信属性 ${i}`,   type: 'number', width: 'col-dial-attr', defaultValue: '1' }
   );
 }
 
@@ -32,6 +32,9 @@ export const ZX2SM_SPEC = defineSpec({
   phoneNumberSlots: PHONE_SLOTS,
   headerColumns: 17,
   requirePhoneNumber: true,
+  
+  /* アイコン番号の範囲 (1-8) */
+  iconRange: { min: 1, max: 8 },
   
   exportWarnings: [
     { type: 'emptyPhoneRows', messageKey: 'EXPORT_WARNING_EMPTY_ROWS' }
