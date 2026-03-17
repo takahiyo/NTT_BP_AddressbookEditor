@@ -40,8 +40,30 @@ export const A1_SPEC = defineSpec({
   /* TEN番号の範囲 (0-1152) */
   tenRange: { min: 0, max: 1152 },
 
-  iconRange: { min: 1, max: 9 },      // アイコン番号は1-9
-  dialAttrRange: { min: 0, max: 2 },  // 発信属性は0-2
+  iconRange: { 
+    min: 1, 
+    max: 9, 
+    labels: {
+      1: '一般アイコン',
+      2: '携帯アイコン',
+      3: '会社アイコン',
+      4: '自宅アイコン',
+      5: '代表アイコン',
+      6: '直通アイコン',
+      7: 'FAXアイコン',
+      8: 'TV電話アイコン',
+      9: '内線アイコン'
+    }
+  },
+  dialAttrRange: { 
+    min: 0, 
+    max: 2, 
+    labels: {
+      0: 'なし',
+      1: '発信',
+      2: '通知'
+    }
+  },
 
   digitModes: {
     '4digit': {

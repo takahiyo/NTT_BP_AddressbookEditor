@@ -329,10 +329,21 @@ export class TableEditor {
         th.appendChild(icon);
       }
 
+      /* アイコンまたは発信属性の場合、選択可能なリストをツールチップに表示 */
+      if (col.key.startsWith('icon') || col.key.startsWith('dialAttr')) {
+        const range = col.key.startsWith('icon') ? this._spec.iconRange : this._spec.dialAttrRange;
+        if (range && range.labels) {
+          const lines = Object.entries(range.labels)
+            .sort(([a], [b]) => parseInt(a) - parseInt(b))
+            .map(([val, label]) => `${val}: ${label}`);
+          th.title = lines.join('\n');
+        }
+      }
+
       /* 制約がある場合、ツールチップにバイト制限を表示 */
-      const constraint = this._spec?.fieldConstraints?.[col.key];
+      const constraint = (this._spec?.fieldConstraints || this._spec?.constraints)?.[col.key];
       if (constraint?.maxBytes) {
-        th.title = `最大${constraint.maxBytes}バイト`;
+        th.title = (th.title ? th.title + '\n' : '') + `最大${constraint.maxBytes}バイト`;
       }
       tr1.appendChild(th);
     });
@@ -561,7 +572,7 @@ export class TableEditor {
       });
 
       /* バイトカウント表示要素 */
-      const constraint = this._spec?.fieldConstraints?.[col.key];
+      const constraint = (this._spec?.fieldConstraints || this._spec?.constraints)?.[col.key];
       if (constraint?.maxBytes) {
         const byteCount = document.createElement('span');
         byteCount.className = 'cell-byte-count';

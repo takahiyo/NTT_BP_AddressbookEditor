@@ -38,7 +38,28 @@ export const ZX2SM_SPEC = defineSpec({
   tenRange: { min: 0, max: 40 },
 
   /* アイコン番号の範囲 (1-8) */
-  iconRange: { min: 1, max: 8 },
+  iconRange: { 
+    min: 1, 
+    max: 8,
+    labels: {
+      1: 'アイコン1',
+      2: 'アイコン2',
+      3: 'アイコン3',
+      4: 'アイコン4',
+      5: 'アイコン5',
+      6: 'アイコン6',
+      7: 'アイコン7',
+      8: 'アイコン8'
+    }
+  },
+  dialAttrRange: {
+    min: 1,
+    max: 2,
+    labels: {
+      1: '発信',
+      2: '通知'
+    }
+  },
   
   exportWarnings: [
     { type: 'emptyPhoneRows', messageKey: 'EXPORT_WARNING_EMPTY_ROWS' }

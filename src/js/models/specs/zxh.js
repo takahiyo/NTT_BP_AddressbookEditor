@@ -40,10 +40,30 @@ export const ZXH_SPEC = defineSpec({
   tenRange: { min: 0, max: 8 },
 
   /* アイコン番号の範囲 (1-8) */
-  iconRange: { min: 1, max: 8 },
+  iconRange: { 
+    min: 1, 
+    max: 8,
+    labels: {
+      1: 'アイコン1',
+      2: 'アイコン2',
+      3: 'アイコン3',
+      4: 'アイコン4',
+      5: 'アイコン5',
+      6: 'アイコン6',
+      7: 'アイコン7',
+      8: 'アイコン8'
+    }
+  },
 
   /* 発信属性の範囲 (1-2) */
-  dialAttrRange: { min: 1, max: 2 },
+  dialAttrRange: { 
+    min: 1, 
+    max: 2,
+    labels: {
+      1: '発信',
+      2: '通知'
+    }
+  },
 
   /* 書出時のエクスポート警告: データが存在しないcsvは読み込みエラーとなるため、空行警告を出す */
   exportWarnings: [
