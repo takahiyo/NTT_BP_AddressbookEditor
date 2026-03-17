@@ -10,9 +10,9 @@ const items = [
   { key: 'ten',           label: 'TEN',       type: 'number', width: 'col-ten',     defaultValue: '0' },
   { key: 'dataType',      label: 'データ種別', type: 'number', width: 'col-default', defaultValue: '1' },
   { key: 'version',       label: 'バージョン', type: 'number', width: 'col-default', defaultValue: '1' },
+  { key: 'memoryNo',      label: 'メモリ番号', type: 'memory', width: 'col-memory' },
   { key: 'reserved1',     label: '予約1',      type: 'number', width: 'col-default', defaultValue: '0' },
   { key: 'reserved2',     label: '予約2',      type: 'number', width: 'col-default', defaultValue: '0' },
-  { key: 'reserved3',     label: '予約3',      type: 'number', width: 'col-default', defaultValue: '0' },
   { key: 'name',          label: '名称',       type: 'text',   width: 'col-name',     constraints: { maxBytes: 20, unit: 'byte', onOverflow: 'autoCut' } },
   { key: 'furigana',      label: 'ﾌﾘｶﾞﾅ',      type: 'text',   width: 'col-furigana', constraints: { maxBytes: 12, unit: 'byte', charType: 'halfKana', onOverflow: 'error', onInvalidChar: 'error' } },
 ];
@@ -47,10 +47,8 @@ export const ZXL_SPEC = defineSpec({
   iconRange: { allowed: [16, 17, 20, 21, 24, 25, 28, 52, 23] },
   dialAttrRange: { min: 0, max: 2 },
 
-  /* ZX-L はメモリ番号列がデータとして無意味（行番号-1）だが、
-     UI上での管理のために仮想的に扱う。
-     ただし、CSV出力には含めないように調整が必要。 */
-  skipMemoryNoInCSV: true,
+  /* 文字列としてのメモリ番号を常に行番号ベースで出力する */
+  autoMemoryNoOnExport: true,
 
   digitModes: {
     '4digit': {

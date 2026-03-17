@@ -48,20 +48,7 @@ export function buildCSVText(header, rows, delimiter = ',', spec = {}) {
   /* データ行 */
   rows.forEach(row => {
     const escapedFields = row.map((field, idx) => escapeField(field, idx));
-    
-    /* ZX-L 等、メモリ番号をCSVに含めない機種の対応 */
-    if (spec.skipMemoryNoInCSV) {
-      const memoryNoIdx = spec.columns.findIndex(col => col.key === 'memoryNo');
-      if (memoryNoIdx === -1) {
-          lines.push(escapedFields.join(delimiter));
-      } else {
-          /* memoryNo を除外して結合 */
-          const filteredRow = escapedFields.filter((_, idx) => idx !== memoryNoIdx);
-          lines.push(filteredRow.join(delimiter));
-      }
-    } else {
-      lines.push(escapedFields.join(delimiter));
-    }
+    lines.push(escapedFields.join(delimiter));
   });
 
   return lines.join('\r\n') + '\r\n';
@@ -77,7 +64,9 @@ export function buildCSVText(header, rows, delimiter = ',', spec = {}) {
 export function objectsToRows(dataObjects, columns, spec = {}) {
   return dataObjects.map((obj, rowIndex) => {
     /* メモリ番号の自動付与 (ZX-L 等、行番号ベースの場合) */
-    if (spec.skipMemoryNoInCSV && (obj.memoryNo === undefined || obj.memoryNo === '')) {
+    if (spec.autoMemoryNoOnExport) {
+        obj.memoryNo = String(rowIndex);
+    } else if (spec.skipMemoryNoInCSV && (obj.memoryNo === undefined || obj.memoryNo === '')) {
         obj.memoryNo = String(rowIndex);
     }
     
