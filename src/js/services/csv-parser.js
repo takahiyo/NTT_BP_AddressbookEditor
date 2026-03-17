@@ -113,27 +113,28 @@ export function detectSpecFromCSV(bytes) {
     f => f === '' || /^\d+$/.test(f.trim())
   );
 
+  /* 1. まず列数が完全に一致する機種を探す (ヘッダーなし機種を優先) */
   for (const spec of allSpecs) {
-    const expectedCols = spec.expectedColumns || spec.headerColumns;
-
-    /* 列数チェック（定義されている場合） */
-    if (expectedCols && columnCount !== expectedCols) continue;
-
-    /* ヘッダー有無チェック */
-    if (spec.hasHeader === false) {
-      /* ヘッダーなし機種: 1行目が全て数値/空文字であること */
-      if (!isFirstRowAllNumericOrEmpty) continue;
-      
-      /* A1: 17列かつUTF-8 BOM付き (既存ロジック) */
-      if (spec.id === 'a1' && hasBOM) return spec.id;
-      
-      /* ZX-L: 20列（BOMがなくても判定可能にする） */
-      if (spec.id === 'zxl' && columnCount === 20) return spec.id;
-    } else {
-      /* ヘッダーあり機種: 1行目に「TEN」が含まれること */
-      if (isFirstRowAllNumericOrEmpty) continue;
-      if (firstFields[0]?.trim() === 'TEN') return spec.id;
+    const expectedCols = spec.expectedColumns;
+    if (expectedCols && columnCount === expectedCols) {
+        /* ヘッダーなし機種（A1, ZX-L等）は列数が特徴的なので、ここで確定させる */
+        if (spec.hasHeader === false) {
+            /* A1 (17列) の場合は念のため BOM または数値チェックを併用しても良いが、
+               現状 A1 しか 17列ヘッダーなしがない。
+               将来的に競合が増えた場合はここを精査する。 */
+            return spec.id;
+        }
     }
+  }
+
+  /* 2. ヘッダーあり機種の判定 */
+  for (const spec of allSpecs) {
+      if (spec.hasHeader !== false) {
+          const expectedCols = spec.headerColumns;
+          if (expectedCols && columnCount === expectedCols) {
+              if (firstFields[0]?.trim() === 'TEN') return spec.id;
+          }
+      }
   }
 
   return null;

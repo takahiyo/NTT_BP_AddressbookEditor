@@ -104,19 +104,26 @@ export function padDataToCapacity(data, targetCount, spec, digitMode) {
     
     /* 仕様に合わせて初期値を設定 */
     spec.columns.forEach(col => {
-      if (col.key !== 'memoryNo' && !col.key.startsWith('_')) {
-        const uiField = spec.fields?.find(f => f.key === col.key);
-        const defVal = uiField?.defaultValue;
+      /* すでに設定済みの memoryNo はスキップ */
+      if (col.key === 'memoryNo') return;
+      if (col.key.startsWith('_')) return;
 
-        if (defVal !== undefined && defVal !== '') {
-          newRow[col.key] = defVal;
-        } else if (col.key.startsWith('icon') || col.key.startsWith('dialAttr')) {
-          newRow[col.key] = '1'; /* アイコン・属性の初期値 */
-        } else if (col.type === 'number') {
-          newRow[col.key] = '0';
-        } else {
-          newRow[col.key] = '';
-        }
+      /* UI定義 (fields) からデフォルト値を探す */
+      const fieldDef = spec.fields?.find(f => f.key === col.key);
+      const defVal = fieldDef?.defaultValue;
+
+      if (defVal !== undefined && defVal !== '') {
+        newRow[col.key] = defVal;
+      } else if (col.key.startsWith('icon')) {
+        /* アイコン番号のデフォルト (zxl等) */
+        newRow[col.key] = spec.iconRange?.default || '1';
+      } else if (col.key.startsWith('dialAttr')) {
+        /* 発信属性のデフォルト */
+        newRow[col.key] = spec.dialAttrRange?.default || '0';
+      } else if (col.type === 'number') {
+        newRow[col.key] = '0';
+      } else {
+        newRow[col.key] = '';
       }
     });
     

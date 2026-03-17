@@ -30,8 +30,8 @@ export const ZXL_SPEC = defineSpec({
   id: 'zxl',
   name: 'ZX-L',
   family: 'typeL',
-  encoding: 'UTF-8',
-  inputEncodings: ['UTF-8', 'Shift_JIS'],
+  encoding: 'Shift_JIS',
+  inputEncodings: ['Shift_JIS', 'UTF-8'],
   phoneNumberSlots: PHONE_SLOTS,
   expectedColumns: 20,    // メタデータ6 + 名称/フリガナ2 + (電話/アイコン/属性)*4 = 20
   hasHeader: false,       // ヘッダーなし
@@ -44,8 +44,15 @@ export const ZXL_SPEC = defineSpec({
   ],
 
   /* アイコン・属性の範囲定義 */
-  iconRange: { allowed: [16, 17, 20, 21, 24, 25, 28, 52, 23] },
-  dialAttrRange: { min: 0, max: 2 },
+  iconRange: { 
+    allowed: [16, 17, 20, 21, 24, 25, 28, 52, 23],
+    default: 16
+  },
+  dialAttrRange: { 
+    min: 0, 
+    max: 2,
+    default: 0
+  },
 
   /* 文字列としてのメモリ番号を常に行番号ベースで出力する */
   autoMemoryNoOnExport: true,

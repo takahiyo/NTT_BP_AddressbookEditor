@@ -5,6 +5,7 @@
 
 import { encodeToShiftJIS, encodeToUTF8BOM } from '../utils/encoding.js';
 import { APP_CONFIG } from '../constants/app-config.js';
+import { toHalfWidthKana } from '../services/converter.js';
 
 /**
  * データ配列をCSV文字列に変換
@@ -71,8 +72,18 @@ export function objectsToRows(dataObjects, columns, spec = {}) {
     }
     
     return columns.map(col => {
-      const val = obj[col.key];
-      return val == null ? '' : String(val);
+      let val = obj[col.key];
+      if (val == null) return '';
+      
+      let str = String(val);
+      
+      /* 機種仕様による自動正規化 (エクスポート直前) */
+      const constraint = spec.fieldConstraints ? spec.fieldConstraints[col.key] : null;
+      if (constraint && constraint.charType === 'halfKana') {
+        str = toHalfWidthKana(str);
+      }
+      
+      return str;
     });
   });
 }
