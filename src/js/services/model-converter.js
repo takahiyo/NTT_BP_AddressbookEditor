@@ -61,12 +61,21 @@ export function convertBetweenModels(data, sourceSpec, targetSpec) {
         /* マッピング元の値がある場合 */
         let finalVal = sourceVal;
 
-        /* アイコン番号の変換ロジック（ターゲットが特定の数値セットを持つ場合、例えばZX-L） */
-        if (col.key.startsWith('icon') && targetSpec.iconRange?.allowed) {
-          const sourceIconNum = parseInt(sourceVal, 10);
-          /* 元のアイコン番号が1-Nの範囲内であれば、ターゲットのallowedリストのN番目の値を採用 */
-          if (!isNaN(sourceIconNum) && sourceIconNum >= 1 && sourceIconNum <= targetSpec.iconRange.allowed.length) {
-            finalVal = targetSpec.iconRange.allowed[sourceIconNum - 1].toString();
+        /* アイコン番号の変換ロジック（双方向マッピング） */
+        if (col.key.startsWith('icon')) {
+          if (targetSpec.iconRange?.allowed) {
+            /* 正変換: 1-N -> 固有リストの数値（例: 他機種 -> ZX-L） */
+            const sourceIconNum = parseInt(sourceVal, 10);
+            if (!isNaN(sourceIconNum) && sourceIconNum >= 1 && sourceIconNum <= targetSpec.iconRange.allowed.length) {
+              finalVal = targetSpec.iconRange.allowed[sourceIconNum - 1].toString();
+            }
+          } else if (sourceSpec.iconRange?.allowed) {
+            /* 逆変換: 固有リストの数値 -> 1-N（例: ZX-L -> 他機種） */
+            const sourceIconVal = parseInt(sourceVal, 10);
+            const index = sourceSpec.iconRange.allowed.indexOf(sourceIconVal);
+            if (index !== -1) {
+              finalVal = (index + 1).toString();
+            }
           }
         }
         
