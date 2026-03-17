@@ -26,7 +26,7 @@ const items = [
 
 export const A1_SPEC = defineSpec({
   id: 'a1',
-  name: 'A1 Directory',
+  name: 'A1Std/Pro',
   family: 'typeA1',
   encoding: 'UTF-8BOM',   // 出力はUTF-8BOM
   inputEncodings: ['UTF-8'], // 入力はUTF-8(BOM)のみ
