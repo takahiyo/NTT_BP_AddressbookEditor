@@ -5,6 +5,7 @@
 
 import { toHalfWidthKana, removeSymbols } from './converter.js';
 import { createLogger } from '../utils/logger.js';
+import { furiganaMappingService } from './furigana-mapping-service.js';
 
 const log = createLogger('furigana');
 
@@ -100,12 +101,19 @@ export async function processAllFurigana(data, spec) {
     const name = row[nameKey] || '';
     if (!name) return;
 
-    let processed = name;
-    // API の結果があれば置換
-    if (apiReadings[name]) {
+    let processed = '';
+    
+    // 1. 個別マッピング（辞書）に登録されているかチェック
+    const mapped = furiganaMappingService.getMatchedFurigana(name);
+    
+    if (mapped) {
+      processed = mapped;
+      log.debug('Custom mapping applied', { name, processed });
+    } else if (apiReadings[name]) {
+      // 2. API の結果があれば置換
       processed = apiReadings[name];
     } else {
-      // 登録がない場合はローカル変換を試みる
+      // 3. 登録がない場合はローカル変換を試みる
       processed = generateLocalFurigana(name);
     }
 

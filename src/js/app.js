@@ -22,6 +22,8 @@ import { confirmDialog, showGaijiEditor, showCityCodeModal, showFuriganaReviewMo
 import { autoAssignMemoryNos, padDataToCapacity } from './services/memory-service.js';
 import { processAllPhoneNumbers } from './services/phone-processor.js';
 import { processAllFurigana } from './services/furigana-processor.js';
+import { furiganaMappingService } from './services/furigana-mapping-service.js';
+import { showFuriganaMappingEditor } from './ui/furigana-mapping-modal.js';
 import { createLogger, getLogText } from './utils/logger.js';
 
 
@@ -241,6 +243,8 @@ function initToolbarUI() {
     onPhoneProcess: handlePhoneProcess,
     onFurigana: handleFurigana,
     onNormalizeIcons: handleNormalizeIcons,
+    onFuriganaMappingToggle: handleFuriganaMappingMasterToggle,
+    onFuriganaMappingEditor: handleFuriganaMappingEditor,
   });
 
 
@@ -723,6 +727,19 @@ async function handleFurigana() {
   runValidation();
   log.info('フリガナ反映完了', { applied: selectedResults.length });
   showToast(formatText(UI_TEXT.TOAST.CONVERT_COMPLETE, { count: selectedResults.length }), 'success');
+}
+
+/** フリガナ：辞書機能（マスター）の有効/無効切り替え */
+function handleFuriganaMappingMasterToggle(enabled) {
+  furiganaMappingService.setMasterEnabled(enabled);
+  log.info('フリガナ辞書機能を切替', { enabled });
+  showToast(`フリガナ個別指定を${enabled ? 'ON' : 'OFF'}にしました`, 'info');
+}
+
+/** フリガナ：辞書編集モーダルを表示 */
+async function handleFuriganaMappingEditor() {
+  await showFuriganaMappingEditor();
+  log.info('フリガナ辞書編集を終了');
 }
 
 /** アイコン番号の正規化 */

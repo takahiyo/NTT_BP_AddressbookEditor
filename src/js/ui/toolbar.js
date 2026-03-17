@@ -4,6 +4,7 @@
  */
 
 import { UI_TEXT } from '../constants/ui-text.js';
+import { furiganaMappingService } from '../services/furigana-mapping-service.js';
 
 /**
  * ツールバーを初期化
@@ -103,6 +104,36 @@ export function initToolbar(container, handlers) {
   const autoProcDrop = createDropdown(UI_TEXT.TOOLBAR.CATEGORIES.AUTO_PROC, '🪄');
   autoProcDrop.menu.appendChild(createButton('btn-phone-proc', UI_TEXT.TOOLBAR.PHONE_PROCESS, '📞', 'secondary', handlers.onPhoneProcess));
   autoProcDrop.menu.appendChild(createButton('btn-furigana', UI_TEXT.TOOLBAR.GENERATE_FURIGANA, '📛', 'secondary', handlers.onFurigana));
+
+  /* 特殊：トグルボタンの追加 */
+  const mappingToggleContainer = document.createElement('div');
+  mappingToggleContainer.className = 'toolbar__dropdown-item';
+  mappingToggleContainer.style.padding = '8px 12px';
+  mappingToggleContainer.style.display = 'flex';
+  mappingToggleContainer.style.alignItems = 'center';
+  mappingToggleContainer.style.justifyContent = 'space-between';
+  mappingToggleContainer.style.gap = '8px';
+  mappingToggleContainer.style.cursor = 'default';
+
+  const toggleLabel = document.createElement('span');
+  toggleLabel.textContent = UI_TEXT.TOOLBAR.MAPPING_MASTER_ONOFF;
+  toggleLabel.style.fontSize = '13px';
+
+  const toggleSwitch = document.createElement('input');
+  toggleSwitch.type = 'checkbox';
+  toggleSwitch.id = 'toggle-furigana-mapping';
+  toggleSwitch.checked = furiganaMappingService.isMasterEnabled();
+  toggleSwitch.addEventListener('change', (e) => {
+    if (handlers.onFuriganaMappingToggle) {
+      handlers.onFuriganaMappingToggle(e.target.checked);
+    }
+  });
+
+  mappingToggleContainer.appendChild(toggleLabel);
+  mappingToggleContainer.appendChild(toggleSwitch);
+  autoProcDrop.menu.appendChild(mappingToggleContainer);
+
+  autoProcDrop.menu.appendChild(createButton('btn-mapping-editor', UI_TEXT.TOOLBAR.EDIT_MAPPING_DICTIONARY, '📖', 'secondary', handlers.onFuriganaMappingEditor));
 
 
 
