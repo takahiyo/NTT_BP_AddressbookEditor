@@ -56,8 +56,8 @@ export const ZX2SM_SPEC = defineSpec({
     min: 1,
     max: 2,
     labels: {
-      1: '発信',
-      2: '通知'
+      1: '一般外線',
+      2: 'PBX内線'
     }
   },
   

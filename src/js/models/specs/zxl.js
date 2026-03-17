@@ -77,9 +77,9 @@ export const ZXL_SPEC = defineSpec({
     min: 0, 
     max: 2,
     labels: {
-      0: 'なし',
-      1: '発信',
-      2: '通知'
+      0: '一般外線番号',
+      1: 'PBX内線番号',
+      2: '内線番号'
     },
     default: 0
   },
