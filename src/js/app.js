@@ -12,6 +12,7 @@ import { validateAll } from './services/validator.js';
 import {
   toHalfWidth, toFullWidth, removeSymbols,
   truncateField, deleteEmptyPhoneRows, normalizePhoneInconsistencies,
+  normalizeIcons,
 } from './services/converter.js';
 import { convertBetweenModels } from './services/model-converter.js';
 import { TableEditor } from './ui/table-editor.js';
@@ -239,6 +240,7 @@ function initToolbarUI() {
     onAutoMemory: handleAutoMemory,
     onPhoneProcess: handlePhoneProcess,
     onFurigana: handleFurigana,
+    onNormalizeIcons: handleNormalizeIcons,
   });
 
 
@@ -340,7 +342,7 @@ async function loadFile(file) {
     let data = mapRowsToObjects(rows, activeSpec.columns);
 
     /* 電話番号とアイコン・属性の不整合をチェック */
-    const { data: normalizedData, changedCount } = normalizePhoneInconsistencies(data, activeSpec.phoneNumberSlots);
+    const { data: normalizedData, changedCount } = normalizePhoneInconsistencies(data, activeSpec);
     if (changedCount > 0) {
       const ok = await confirmDialog(formatText(UI_TEXT.MODAL.CONFIRM_NORMALIZE_PHONE, { count: changedCount }));
       if (ok) {
@@ -721,6 +723,25 @@ async function handleFurigana() {
   runValidation();
   log.info('フリガナ反映完了', { applied: selectedResults.length });
   showToast(formatText(UI_TEXT.TOAST.CONVERT_COMPLETE, { count: selectedResults.length }), 'success');
+}
+
+/** アイコン番号の正規化 */
+function handleNormalizeIcons() {
+  const data = state.tableEditor.getData();
+  if (!data || data.length === 0) return;
+
+  log.info('アイコン番号の正規化を開始');
+  const result = normalizeIcons(data, state.inputSpec);
+
+  if (result.normalizedCount === 0) {
+    showToast('正規化が必要なアイコン番号はありません', 'info');
+    return;
+  }
+
+  state.tableEditor.updateData(result.data);
+  runValidation();
+  log.info('アイコン番号の正規化を完了', { normalized: result.normalizedCount });
+  showToast(formatText(UI_TEXT.TOAST.NORMALIZE_SUCCESS, { count: result.normalizedCount }), 'success');
 }
 
 /* ============================================

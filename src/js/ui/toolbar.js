@@ -97,6 +97,7 @@ export function initToolbar(container, handlers) {
   colDrop.menu.appendChild(createButton('btn-to-half', UI_TEXT.TOOLBAR.CONVERT_HALFWIDTH, '㊀', 'secondary', handlers.onToHalf));
   colDrop.menu.appendChild(createButton('btn-to-full', UI_TEXT.TOOLBAR.CONVERT_FULLWIDTH, '㊁', 'secondary', handlers.onToFull));
   colDrop.menu.appendChild(createButton('btn-remove-symbols', UI_TEXT.TOOLBAR.REMOVE_SYMBOLS, '✂️', 'secondary', handlers.onRemoveSymbols));
+  colDrop.menu.appendChild(createButton('btn-normalize-icons', UI_TEXT.TOOLBAR.NORMALIZE_ICONS, '🎨', 'secondary', handlers.onNormalizeIcons));
 
   /* === 自動加工 === */
   const autoProcDrop = createDropdown(UI_TEXT.TOOLBAR.CATEGORIES.AUTO_PROC, '🪄');
@@ -129,7 +130,7 @@ export function updateToolbarState(buttons, hasData) {
     'btn-export', 'btn-delete-row',
     'btn-validate', 'btn-to-half', 'btn-to-full',
     'btn-remove-symbols', 'btn-truncate', 'btn-delete-empty',
-    'btn-auto-memory', 'btn-phone-proc', 'btn-furigana',
+    'btn-auto-memory', 'btn-phone-proc', 'btn-furigana', 'btn-normalize-icons',
   ];
   dataRequiredButtons.forEach(id => {
     if (buttons[id]) {

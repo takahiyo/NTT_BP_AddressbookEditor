@@ -38,6 +38,7 @@ export const UI_TEXT = {
     AUTO_ASSIGN_MEMORY: 'メモリ採番',
     PHONE_PROCESS: '電話番号加工',
     GENERATE_FURIGANA: 'フリガナ生成',
+    NORMALIZE_ICONS: 'アイコン正規化',
   },
 
 
@@ -100,6 +101,7 @@ export const UI_TEXT = {
     EXPORT_SUCCESS: 'CSVを出力しました',
     VALIDATION_COMPLETE: 'バリデーション完了（エラー: {errors}, 警告: {warnings}）',
     CONVERT_COMPLETE: '変換完了（{count}セル）',
+    NORMALIZE_SUCCESS: 'アイコン番号を正規化しました（{count}箇所）',
     TRUNCATE_COMPLETE: '超過カット完了（{count}セル）',
     EMPTY_ROWS_DELETED: '空行を{count}件削除しました',
     GAIJI_SAVED: '外字設定を保存しました',
