@@ -12,7 +12,7 @@
 
 import { UI_TEXT } from '../constants/ui-text.js';
 import { APP_CONFIG } from '../constants/app-config.js';
-import { getByteLength } from '../utils/char-utils.js';
+import { getByteLength, toHalfWidth } from '../utils/char-utils.js';
 
 /**
  * テーブルエディタクラス
@@ -484,7 +484,13 @@ export class TableEditor {
 
       /* セル値変更イベント */
       input.addEventListener('input', (e) => {
-        const value = e.target.value;
+        let value = e.target.value;
+        if (col.forceHalfWidth) {
+          value = toHalfWidth(value);
+          if (e.target.value !== value) {
+            e.target.value = value;
+          }
+        }
         this._data[rowIndex][col.key] = value;
         this._updateByteCount(td, col.key, value);
 

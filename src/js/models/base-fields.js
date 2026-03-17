@@ -18,6 +18,7 @@ export const BASE_FIELDS = {
     type: 'number',
     editable: true,
     cssClass: 'col-ten',
+    forceHalfWidth: true,
   },
   memoryNo: {
     key: 'memoryNo',
@@ -25,6 +26,7 @@ export const BASE_FIELDS = {
     type: 'text',
     editable: true,
     cssClass: 'col-memory',
+    forceHalfWidth: true,
   },
   name: {
     key: 'name',
@@ -32,6 +34,7 @@ export const BASE_FIELDS = {
     type: 'text',
     editable: true,
     cssClass: 'col-name',
+    forceHalfWidth: false,
   },
   furigana: {
     key: 'furigana',
@@ -41,6 +44,7 @@ export const BASE_FIELDS = {
     cssClass: 'col-furigana',
     /* 半角カナが基本だが、機種固有で上書き可能 */
     charType: 'halfKana',
+    forceHalfWidth: false,
   },
   groupNo: {
     key: 'groupNo',
@@ -48,6 +52,7 @@ export const BASE_FIELDS = {
     type: 'number',
     editable: true,
     cssClass: 'col-group',
+    forceHalfWidth: true,
   },
 };
 
@@ -64,6 +69,7 @@ export function createPhoneFieldSet(slotNumber) {
       type: 'phone',
       editable: true,
       cssClass: 'col-phone',
+      forceHalfWidth: true,
     },
     {
       key: `icon${slotNumber}`,
@@ -71,6 +77,7 @@ export function createPhoneFieldSet(slotNumber) {
       type: 'number',
       editable: true,
       cssClass: 'col-icon',
+      forceHalfWidth: true,
     },
     {
       key: `dialAttr${slotNumber}`,
@@ -78,6 +85,7 @@ export function createPhoneFieldSet(slotNumber) {
       type: 'number',
       editable: true,
       cssClass: 'col-dial-attr',
+      forceHalfWidth: true,
     },
   ];
 }
@@ -125,6 +133,8 @@ export function defineSpec(partialSpec, items) {
       editable: finalField.editable !== false,
       cssClass: finalField.cssClass || '',
       defaultValue: finalField.defaultValue || '',
+      /* 名称とフリガナ以外はデフォルトで半角強制 */
+      forceHalfWidth: finalField.forceHalfWidth !== false,
     });
   });
 

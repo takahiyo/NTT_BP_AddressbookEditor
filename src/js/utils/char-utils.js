@@ -158,3 +158,15 @@ export function findCommonMistakes(str) {
   }
   return mistakes;
 }
+/**
+ * 全角文字を半角文字に変換
+ * 対象: 英数字、記号（ASCII範囲）、全角スペース
+ * @param {string} str - 対象文字列
+ * @returns {string} 変換後の文字列
+ */
+export function toHalfWidth(str) {
+  if (!str) return '';
+  return str.replace(/[！-～]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0))
+            .replace(/　/g, ' ')   /* 全角スペース */
+            .replace(/—|–|―|ー|－/g, '-'); /* 各種ハイフン・長音を半角ハイフンに統一 */
+}
