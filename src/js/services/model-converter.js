@@ -45,62 +45,57 @@ export function convertBetweenModels(data, sourceSpec, targetSpec) {
 
     /* --- [SPECIAL] Google連絡先からの入力時の事前処理 --- */
     if (sourceSpec.id === 'google') {
-      // 姓名結合
-      const lastName = row.lastName || '';
-      const firstName = row.firstName || '';
+      // 姓名結合 (インポート直後の表示用)
+      const lastName = (row.lastName || '').trim();
+      const firstName = (row.firstName || '').trim();
       row.name = [lastName, firstName].filter(n => n).join(' ');
 
-      // フリガナ結合（あれば）
-      const pLastName = row.phoneticLastName || '';
-      const pFirstName = row.phoneticFirstName || '';
+      // フリガナ結合
+      const pLastName = (row.phoneticLastName || '').trim();
+      const pFirstName = (row.phoneticFirstName || '').trim();
       if (pLastName || pFirstName) {
-          row.furigana = [pLastName, pFirstName].filter(n => n).join(' ');
+        row.furigana = [pLastName, pFirstName].filter(n => n).join(' ');
       }
 
-      // 電話番号とタイプ（アイコン）のマッピング
+      // --- 電話番号の分割展開ロジック ---
+      // まず全スロットのValueを集めて一つのリストにする（:::や改行で区切られているものを全て抽出）
+      let allFoundNumbers = [];
+      const getIconCode = (t) => {
+        const lowerT = (t || '').toLowerCase();
+        if (lowerT.includes('mobile') || lowerT.includes('携帯') || lowerT.includes('cell') || lowerT.includes('iphone')) return '2';
+        if (lowerT.includes('home') || lowerT.includes('自宅')) return '4';
+        if (lowerT.includes('work') || lowerT.includes('勤務先') || lowerT.includes('office')) return '3';
+        if (lowerT.includes('fax') || lowerT.includes('ファクス')) return '7';
+        if (lowerT.includes('main') || lowerT.includes('代表')) return '5';
+        return '1';
+      };
+
       for (let i = 1; i <= 4; i++) {
         const val = row[`phone${i}Value`];
         const type = row[`phone${i}Type`];
-        
         if (val) {
-          /* [NEW] ::: や 改行、セミコロンなどで区切られた複数の番号が含まれている場合を考慮 */
-          const numbers = val.split(/[;:\n\r]+/).map(s => s.trim()).filter(s => s);
-          
-          if (numbers.length > 0) {
-            // 1番目の番号を現在のスロットに設定
-            row[`phone${i}`] = numbers[0].replace(/[^\d+*#]/g, '');
-            
-            // アイコンマッピング（共通関数化したいが、ここではインラインで記述）
-            const getIconCode = (t) => {
-              const lowerT = (t || '').toLowerCase();
-              if (lowerT.includes('mobile') || lowerT.includes('携帯') || lowerT.includes('cell') || lowerT.includes('iphone')) return '2';
-              if (lowerT.includes('home') || lowerT.includes('自宅')) return '4';
-              if (lowerT.includes('work') || lowerT.includes('勤務先') || lowerT.includes('office')) return '3';
-              if (lowerT.includes('fax') || lowerT.includes('ファクス')) return '7';
-              if (lowerT.includes('main') || lowerT.includes('代表')) return '5';
-              return '1';
-            };
+          // Google特有の区切り文字（::: , ; 改行）で分割
+          const parts = val.split(/[;:\n\r]+/).map(s => s.trim()).filter(s => s);
+          parts.forEach(num => {
+            allFoundNumbers.push({
+              value: num.replace(/[^\d+*#]/g, ''),
+              icon: getIconCode(type)
+            });
+          });
+        }
+      }
 
-            row[`icon${i}`] = getIconCode(type);
-            row[`dialAttr${i}`] = '1';
-
-            // 2番目以降の番号があれば、空いている電話番号スロットを探して展開
-            if (numbers.length > 1) {
-              let nextSlot = i + 1;
-              for (let j = 1; j < numbers.length && nextSlot <= 4; j++) {
-                // すでにデータがあるスロットは飛ばす
-                while (nextSlot <= 4 && (row[`phone${nextSlot}Value`] || row[`phone${nextSlot}`])) {
-                  nextSlot++;
-                }
-                if (nextSlot <= 4) {
-                  row[`phone${nextSlot}`] = numbers[j].replace(/[^\d+*#]/g, '');
-                  row[`icon${nextSlot}`] = getIconCode(type); // 種別は1つ目のものを使用
-                  row[`dialAttr${nextSlot}`] = '1';
-                  nextSlot++;
-                }
-              }
-            }
-          }
+      // 抽出した番号をスロット1〜4に順番に割り当てる
+      for (let i = 1; i <= 4; i++) {
+        if (allFoundNumbers[i - 1]) {
+          row[`phone${i}`] = allFoundNumbers[i - 1].value;
+          row[`icon${i}`] = allFoundNumbers[i - 1].icon;
+          row[`dialAttr${i}`] = '1';
+        } else {
+          // 番号がないスロットはクリア（再インポート時の残骸防止）
+          row[`phone${i}`] = '';
+          row[`icon${i}`] = '1';
+          row[`dialAttr${i}`] = '1';
         }
       }
     }
