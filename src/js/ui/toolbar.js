@@ -92,12 +92,14 @@ export function initToolbar(container, handlers) {
   const rowDrop = createDropdown(UI_TEXT.TOOLBAR.CATEGORIES.EDIT_ROW, '📝');
   rowDrop.menu.appendChild(createButton('btn-add-row', UI_TEXT.TOOLBAR.ADD_ROW, '➕', 'secondary', handlers.onAddRow));
   rowDrop.menu.appendChild(createButton('btn-delete-row', UI_TEXT.TOOLBAR.DELETE_ROW, '🗑️', 'secondary', handlers.onDeleteRow));
+  rowDrop.menu.appendChild(createButton('btn-delete-empty', UI_TEXT.TOOLBAR.DELETE_EMPTY_ROWS, '🧹', 'warning', handlers.onDeleteEmpty));
 
   /* === 列編集 === */
   const colDrop = createDropdown(UI_TEXT.TOOLBAR.CATEGORIES.EDIT_COL, '📊');
   colDrop.menu.appendChild(createButton('btn-to-half', UI_TEXT.TOOLBAR.CONVERT_HALFWIDTH, '㊀', 'secondary', handlers.onToHalf));
   colDrop.menu.appendChild(createButton('btn-to-full', UI_TEXT.TOOLBAR.CONVERT_FULLWIDTH, '㊁', 'secondary', handlers.onToFull));
   colDrop.menu.appendChild(createButton('btn-remove-symbols', UI_TEXT.TOOLBAR.REMOVE_SYMBOLS, '✂️', 'secondary', handlers.onRemoveSymbols));
+  colDrop.menu.appendChild(createButton('btn-auto-memory', UI_TEXT.TOOLBAR.AUTO_ASSIGN_MEMORY, '🔢', 'secondary', handlers.onAutoMemory));
   colDrop.menu.appendChild(createButton('btn-normalize-icons', UI_TEXT.TOOLBAR.NORMALIZE_ICONS, '🎨', 'secondary', handlers.onNormalizeIcons));
 
   /* === 自動加工 === */
@@ -139,9 +141,7 @@ export function initToolbar(container, handlers) {
 
   /* === 全体 === */
   const generalDrop = createDropdown(UI_TEXT.TOOLBAR.CATEGORIES.GENERAL, '⚙️');
-  generalDrop.menu.appendChild(createButton('btn-auto-memory', UI_TEXT.TOOLBAR.AUTO_ASSIGN_MEMORY, '🔢', 'secondary', handlers.onAutoMemory));
   generalDrop.menu.appendChild(createButton('btn-truncate', UI_TEXT.TOOLBAR.TRUNCATE_ALL, '📏', 'warning', handlers.onTruncate));
-  generalDrop.menu.appendChild(createButton('btn-delete-empty', UI_TEXT.TOOLBAR.DELETE_EMPTY_ROWS, '🧹', 'warning', handlers.onDeleteEmpty));
   generalDrop.menu.appendChild(createButton('btn-gaiji', UI_TEXT.TOOLBAR.GAIJI_SETTINGS, '⚙️', 'secondary', handlers.onGaijiSettings));
 
   /* === 全検証 === */
