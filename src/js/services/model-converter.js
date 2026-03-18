@@ -114,6 +114,42 @@ export function convertBetweenModels(data, sourceSpec, targetSpec) {
       }
     }
 
+    /* --- [SPECIAL] Google連絡先への出力時の後処理（マッピング補完） --- */
+    if (targetSpec.id === 'google') {
+      // name -> firstName
+      if (row.name && !row.firstName) {
+        newRow.firstName = row.name;
+      }
+      // furigana -> phoneticFirstName
+      if (row.furigana && !row.phoneticFirstName) {
+        newRow.phoneticFirstName = row.furigana;
+      }
+      
+      const getGoogleTypeFromIconCode = (code) => {
+        const c = code?.toString();
+        if (c === '2' || c === '17') return 'Mobile';
+        if (c === '4' || c === '21') return 'Home';
+        if (c === '3' || c === '20') return 'Work';
+        if (c === '7' || c === '28') return 'Fax';
+        return 'Other';
+      };
+
+      // phoneX -> phoneXValue, iconX -> phoneXType
+      for (let i = 1; i <= 4; i++) {
+        const pKey = `phone${i}`;
+        const iKey = `icon${i}`;
+        const vKey = `phone${i}Value`;
+        const tKey = `phone${i}Type`;
+
+        if (row[pKey] && !newRow[vKey]) {
+          newRow[vKey] = row[pKey];
+          if (!newRow[tKey]) {
+            newRow[tKey] = getGoogleTypeFromIconCode(row[iKey]);
+          }
+        }
+      }
+    }
+  
     targetSpec.columns.forEach(col => {
       /* マッピング元のキーを探す（まずkey完全一致、次にlabel一致） */
       const sourceColByKey = sourceSpec.columns.find(c => c.key === col.key);
@@ -171,6 +207,10 @@ export function convertBetweenModels(data, sourceSpec, targetSpec) {
         newRow[col.key] = sourceVal;
       } else {
         /* 変換先にのみ存在するフィールドでデフォルト値も無い場合 */
+        if (newRow[col.key] !== undefined) {
+          /* 既に個別マッピング（Google等）で値が入っている場合は維持 */
+          return;
+        }
         if (col.key.startsWith('icon') || col.key.startsWith('dialAttr')) {
           newRow[col.key] = '1';
         } else if (fieldInfo.type === 'number') {
