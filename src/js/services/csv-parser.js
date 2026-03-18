@@ -115,7 +115,10 @@ export function detectSpecFromCSV(bytes) {
 
   /* 1行目がヘッダー（"TEN"で始まるか、Google形式のシグネチャを含む）かどうか */
   const isHeaderRow = firstFields[0]?.trim().toUpperCase() === 'TEN' || 
-                      firstFields.some(f => f.includes('First Name') || f === '名');
+                      firstFields.some(f => {
+                         const uf = f.trim();
+                         return uf === 'First Name' || uf === '名' || uf === 'Given Name' || uf.includes('Value');
+                      });
 
   /* 1. まず列数とヘッダー有無の両方が一致する機種を探す */
   for (const spec of allSpecs) {

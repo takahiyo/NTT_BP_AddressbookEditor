@@ -43,5 +43,9 @@ export const GOOGLE_SPEC = defineSpec({
     '電話 1 - 種別': 'phone1Type',
     '電話 2 - 値': 'phone2Value',
     '電話 2 - 種別': 'phone2Type',
+    '電話 3 - 値': 'phone3Value',
+    '電話 3 - 種別': 'phone3Type',
+    '電話 4 - 値': 'phone4Value',
+    '電話 4 - 種別': 'phone4Type',
   }
 }, items);

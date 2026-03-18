@@ -67,10 +67,11 @@ export function convertBetweenModels(data, sourceSpec, targetSpec) {
               // アイコンマッピング
               let iconCode = '1'; // Default
               const t = (type || '').toLowerCase();
-              if (t.includes('mobile') || t.includes('携帯')) iconCode = '2';
+              if (t.includes('mobile') || t.includes('携帯') || t.includes('cell') || t.includes('iphone')) iconCode = '2';
               else if (t.includes('home') || t.includes('自宅')) iconCode = '4';
               else if (t.includes('work') || t.includes('勤務先') || t.includes('office')) iconCode = '3';
               else if (t.includes('fax') || t.includes('ファクス')) iconCode = '7';
+              else if (t.includes('main') || t.includes('代表')) iconCode = '5';
               
               row[`icon${i}`] = iconCode;
               row[`dialAttr${i}`] = '1'; // デフォルト発信

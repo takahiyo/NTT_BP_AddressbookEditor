@@ -31,36 +31,83 @@ export function detectBOM(bytes) {
 
 /**
  * バイト列からShift_JISの可能性を推定
+ * ※UTF-8との誤判定を避けるため、より厳格に判定
  * @param {Uint8Array} bytes - ファイルのバイト列
  * @returns {boolean} Shift_JISの可能性が高い場合true
  */
 function looksLikeShiftJIS(bytes) {
-  let sjisScore = 0;
+  let sjisChars = 0;
+  let invalidSjis = 0;
   let i = 0;
-  const len = Math.min(bytes.length, 4096); /* 先頭4KBで判定 */
+  const len = Math.min(bytes.length, 8192);
 
   while (i < len) {
     const b = bytes[i];
-    /* Shift_JIS 2バイト文字の1バイト目の範囲 */
+    
+    // 1バイト文字 (半角英数等)
+    if (b <= 0x7F) {
+      i++;
+      continue;
+    }
+    
+    // 半角カナ (0xA1-0xDF)
+    if (b >= 0xA1 && b <= 0xDF) {
+      sjisChars++;
+      i++;
+      continue;
+    }
+
+    // 2バイト文字の1バイト目
     if ((b >= 0x81 && b <= 0x9F) || (b >= 0xE0 && b <= 0xFC)) {
       if (i + 1 < len) {
         const b2 = bytes[i + 1];
-        /* 2バイト目の範囲チェック */
         if ((b2 >= 0x40 && b2 <= 0x7E) || (b2 >= 0x80 && b2 <= 0xFC)) {
-          sjisScore++;
+          sjisChars++;
           i += 2;
           continue;
         }
       }
     }
-    /* 半角カナ範囲 (0xA1-0xDF) */
-    if (b >= 0xA1 && b <= 0xDF) {
-      sjisScore++;
-    }
+
+    // いずれにも当てはまらない上位ビットが立っているバイト
+    invalidSjis++;
     i++;
   }
-  /* スコアが一定以上ならShift_JISと判定 */
-  return sjisScore > 0;
+  
+  // 有効なSJIS文字があり、かつ不正なバイトが少なければSJISと判定
+  return sjisChars > 0 && invalidSjis < sjisChars * 0.1;
+}
+
+/**
+ * Valid UTF-8 かチェック
+ */
+function isUtf8(bytes) {
+    let i = 0;
+    const len = Math.min(bytes.length, 8192);
+    while (i < len) {
+        const b1 = bytes[i++];
+        if (b1 <= 0x7F) continue;
+        if (b1 >= 0xC2 && b1 <= 0xDF) {
+            if (i >= len) break;
+            if ((bytes[i++] & 0xC0) !== 0x80) return false;
+            continue;
+        }
+        if (b1 >= 0xE0 && b1 <= 0xEF) {
+            if (i + 1 >= len) break;
+            if ((bytes[i++] & 0xC0) !== 0x80) return false;
+            if ((bytes[i++] & 0xC0) !== 0x80) return false;
+            continue;
+        }
+        if (b1 >= 0xF0 && b1 <= 0xF4) {
+            if (i + 2 >= len) break;
+            if ((bytes[i++] & 0xC0) !== 0x80) return false;
+            if ((bytes[i++] & 0xC0) !== 0x80) return false;
+            if ((bytes[i++] & 0xC0) !== 0x80) return false;
+            continue;
+        }
+        return false;
+    }
+    return true;
 }
 
 /**
@@ -73,6 +120,9 @@ export function detectEncoding(bytes) {
   /* BOMチェック */
   const bomEncoding = detectBOM(bytes);
   if (bomEncoding) return bomEncoding;
+
+  /* UTF-8判定（BOMなしでもValid UTF-8なら優先） */
+  if (isUtf8(bytes)) return 'UTF-8';
 
   /* Shift_JIS推定 */
   if (looksLikeShiftJIS(bytes)) return 'Shift_JIS';
