@@ -18,12 +18,14 @@ import { convertBetweenModels } from './services/model-converter.js';
 import { TableEditor } from './ui/table-editor.js';
 import { initToolbar, updateToolbarState } from './ui/toolbar.js';
 import { showToast, formatText } from './ui/toast.js';
-import { confirmDialog, showGaijiEditor, showCityCodeModal, showFuriganaReviewModal } from './ui/modal.js';
+import { confirmDialog, showCityCodeModal, showFuriganaReviewModal } from './ui/modal.js';
 import { autoAssignMemoryNos, padDataToCapacity } from './services/memory-service.js';
 import { processAllPhoneNumbers } from './services/phone-processor.js';
 import { processAllFurigana } from './services/furigana-processor.js';
 import { furiganaMappingService } from './services/furigana-mapping-service.js';
+import { gaijiService } from './services/gaiji-service.js';
 import { showFuriganaMappingEditor } from './ui/furigana-mapping-modal.js';
+import { showGaijiMappingEditor } from './ui/gaiji-mapping-modal.js';
 import { createLogger, getLogText } from './utils/logger.js';
 
 
@@ -51,10 +53,8 @@ const state = {
   /** ツールバーボタン参照 */
   toolbarButtons: null,
   /** 外字設定（使用不可文字のSet） */
-  gaijiText: '',
+  gaijiChars: new Set(),
   /** バリデーション結果 */
-
-
   lastValidation: null,
 };
 
@@ -77,7 +77,9 @@ function initApp() {
   /* ファイル関係のイベント登録 */
   initDragDrop();
   initFileInput();
-  loadGaijiFromStorage();
+  /* 辞書の読み込み */
+  gaijiService.init(state.inputSpec?.id);
+  state.gaijiChars = gaijiService.getGaijiChars();
   updateStatusBar();
 
 
@@ -133,6 +135,10 @@ function initSpecs() {
     state.tableEditor.setSpec(newSpec);
     state.tableEditor.setData(convertedData);
     
+    /* 入力機種に合わせて外字サービスを再初期化 */
+    gaijiService.init(newSpec.id);
+    state.gaijiChars = gaijiService.getGaijiChars();
+
     /* 入力機種に合わせて出力機種・桁数モードも更新（従来通り一貫性を保つ） */
     state.outputSpec = newSpec;
     outputSelect.value = newSpec.id;
@@ -194,6 +200,10 @@ function initSpecs() {
     state.tableEditor.setSpec(newSpec);
     state.tableEditor.setMappingSpec(newSpec); /* 同じ機種をセットすることで2段ヘッダーを消す */
     state.tableEditor.setData(convertedData);
+
+    /* 外字サービスを再初期化 */
+    gaijiService.init(newSpec.id);
+    state.gaijiChars = gaijiService.getGaijiChars();
 
     updateToolbarState(state.toolbarButtons, convertedData.length > 0);
     runValidation();
@@ -801,56 +811,10 @@ function initTheme() {
 
 /** 外字設定モーダルを開く */
 async function handleGaijiSettings() {
-  const result = await showGaijiEditor(state.gaijiText);
-  if (result !== null) {
-    state.gaijiText = result;
-    state.gaijiChars = parseGaijiText(result);
-    saveGaijiToStorage();
+  const updated = await showGaijiMappingEditor();
+  if (updated) {
+    state.gaijiChars = gaijiService.getGaijiChars();
     runValidation();
-    log.info('外字設定を更新', { charCount: state.gaijiChars.size });
-    showToast(UI_TEXT.TOAST.GAIJI_SAVED, 'success');
-  }
-}
-
-/**
- * 外字テキストをSetに変換
- * @param {string} text - 1行1文字のテキスト
- * @returns {Set<string>}
- */
-function parseGaijiText(text) {
-  const chars = new Set();
-  if (!text) return chars;
-  text.split('\n').forEach(line => {
-    const trimmed = line.trim();
-    if (trimmed.length === 1) {
-      chars.add(trimmed);
-    }
-  });
-  return chars;
-}
-
-/** localStorageに外字設定を保存 */
-function saveGaijiToStorage() {
-  try {
-    const key = `gaiji_${state.inputSpec?.id || 'default'}`;
-    localStorage.setItem(key, state.gaijiText);
-  } catch (e) {
-    log.warn('外字設定の保存に失敗', { error: e.message });
-  }
-}
-
-/** localStorageから外字設定を読み込み */
-function loadGaijiFromStorage() {
-  try {
-    const key = `gaiji_${state.inputSpec?.id || 'default'}`;
-    const text = localStorage.getItem(key);
-    if (text) {
-      state.gaijiText = text;
-      state.gaijiChars = parseGaijiText(text);
-      log.debug('外字設定を読み込み', { charCount: state.gaijiChars.size });
-    }
-  } catch (e) {
-    log.warn('外字設定の読み込みに失敗', { error: e.message });
   }
 }
 

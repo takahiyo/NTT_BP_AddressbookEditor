@@ -40,6 +40,8 @@ export const UI_TEXT = {
     GENERATE_FURIGANA: 'フリガナ生成',
     MAPPING_MASTER_ONOFF: 'フリガナ辞書',
     EDIT_MAPPING_DICTIONARY: '辞書を編集...',
+    GAIJI_MAPPING_TITLE: '外字辞書',
+    GAIJI_MAPPING_EDIT: '外字設定を編集...',
     NORMALIZE_ICONS: 'アイコン正規化',
   },
 
@@ -93,6 +95,8 @@ export const UI_TEXT = {
     FURIGANA_COL_NAME: '名称',
     FURIGANA_COL_CURRENT: '現在',
     FURIGANA_COL_GENERATED: '生成',
+    GAIJI_COL_CHAR: '文字',
+    GAIJI_COL_DESC: '備考',
     BTN_APPLY: '選択を反映',
   },
 
