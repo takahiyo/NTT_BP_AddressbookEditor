@@ -15,5 +15,8 @@
   - 対策：`headerSignature` による判別をループの最優先に移動した。
 - [x] `app.js` の `loadFile` 内で `state.inputSpec` が更新された際に UI（セレクトボックス）が連動しているか確認。
   - 確認結果：`inputSelect.value = detectedSpec.id;` が実行されており、正常に連動するはず。
-- [/] GitHubの同期確認
+- [x] GitHubの同期確認
   - アクション：`git push` を再実行し、リモートの `dev` ブランチと完全に一致させている。
+- [x] 電話番号が Phone 1 にまとまってしまう問題の根本解決
+  - 原因：`row.phone1`（内部用）は更新されていたが、Google形式の表示に使われる `row.phone1Value` が未更新だったため、画面表示が変わっていなかった。
+  - 対策：`model-converter.js` で `phoneXValue` も同時に更新するように修正。

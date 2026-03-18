@@ -60,7 +60,7 @@ export function convertBetweenModels(data, sourceSpec, targetSpec) {
       // --- 電話番号の分割展開ロジック ---
       // まず全スロットのValueを集めて一つのリストにする（:::や改行で区切られているものを全て抽出）
       let allFoundNumbers = [];
-      const getIconCode = (t) => {
+      const getIconCodeForGoogle = (t) => {
         const lowerT = (t || '').toLowerCase();
         if (lowerT.includes('mobile') || lowerT.includes('携帯') || lowerT.includes('cell') || lowerT.includes('iphone')) return '2';
         if (lowerT.includes('home') || lowerT.includes('自宅')) return '4';
@@ -79,23 +79,37 @@ export function convertBetweenModels(data, sourceSpec, targetSpec) {
           parts.forEach(num => {
             allFoundNumbers.push({
               value: num.replace(/[^\d+*#]/g, ''),
-              icon: getIconCode(type)
+              type: type || ''
             });
           });
         }
       }
 
       // 抽出した番号をスロット1〜4に順番に割り当てる
+      // 内部モデル(phoneX)とGoogle固有(phoneXValue)の両方を更新
       for (let i = 1; i <= 4; i++) {
+        const pKey = `phone${i}`;
+        const vKey = `phone${i}Value`;
+        const iKey = `icon${i}`;
+        const tKey = `phone${i}Type`;
+        const dKey = `dialAttr${i}`;
+
         if (allFoundNumbers[i - 1]) {
-          row[`phone${i}`] = allFoundNumbers[i - 1].value;
-          row[`icon${i}`] = allFoundNumbers[i - 1].icon;
-          row[`dialAttr${i}`] = '1';
+          const numInfo = allFoundNumbers[i - 1];
+          const iconCode = getIconCodeForGoogle(numInfo.type);
+          
+          row[pKey] = numInfo.value;
+          row[vKey] = numInfo.value;
+          row[iKey] = iconCode;
+          row[tKey] = numInfo.type; // 元のタイプ文字列を維持（表示用）
+          row[dKey] = '1';
         } else {
-          // 番号がないスロットはクリア（再インポート時の残骸防止）
-          row[`phone${i}`] = '';
-          row[`icon${i}`] = '1';
-          row[`dialAttr${i}`] = '1';
+          // 番号がないスロットはクリア
+          row[pKey] = '';
+          row[vKey] = '';
+          row[iKey] = '1';
+          row[tKey] = '';
+          row[dKey] = '1';
         }
       }
     }
