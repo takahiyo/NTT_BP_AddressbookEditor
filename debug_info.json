@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-03-18T14:45:00Z",
+  "status": {
+    "current_branch": "dev",
+    "last_commit": "a650f3b3108482d0aad2fa3",
+    "files_modified": [
+      "src/js/services/csv-parser.js",
+      "src/js/services/model-converter.js",
+      "src/js/services/converter.js",
+      "src/js/app.js",
+      "src/js/constants/ui-text.js"
+    ]
+  },
+  "debug_points": {
+    "csv_detection": "detectSpecFromCSV prioritized headerSignature which includes 'First Name'.",
+    "phone_splitting": "Enhanced to flatten all found numbers across slot1-4 value fields.",
+    "name_merging": "Correctly handles cases where 'First Name' is empty.",
+    "half_width_conversion": "Now converts Hiragana to Half-width Katakana via Full-width Katakana."
+  }
+}

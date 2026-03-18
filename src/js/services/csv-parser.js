@@ -120,25 +120,23 @@ export function detectSpecFromCSV(bytes) {
                          return uf === 'First Name' || uf === '名' || uf === 'Given Name' || uf.includes('Value');
                       });
 
-  /* 1. まず列数とヘッダー有無の両方が一致する機種を探す */
+  /* 1. シグネチャによる判別を最優先（Google等の可変列対応） */
+  for (const spec of allSpecs) {
+    if (spec.headerSignature && text.includes(spec.headerSignature)) {
+      /* ヘッダー内にシグネチャが含まれていれば一致とみなす */
+      return spec.id;
+    }
+  }
+
+  /* 2. 次に列数とヘッダー有無による判別（従来方式） */
   for (const spec of allSpecs) {
     const expectedCols = spec.hasHeader === false ? spec.expectedColumns : spec.headerColumns;
 
     if (expectedCols && columnCount === expectedCols) {
         if (spec.hasHeader === false && !isHeaderRow) {
-            /* ヘッダーなし機種の条件に一致 */
             return spec.id;
         }
         if (spec.hasHeader !== false && isHeaderRow) {
-            /* ヘッダーあり機種: シグネチャがあればそれもチェック（ZXH vs ZX2SM） */
-            if (spec.headerSignature) {
-                if (firstLine.includes(spec.headerSignature)) {
-                    return spec.id;
-                }
-                /* シグネチャが合わない場合は次へ */
-                continue;
-            }
-            /* シグネチャ指定がない機種、またはシグネチャが特に必要ない場合は一致とみなす */
             return spec.id;
         }
     }
