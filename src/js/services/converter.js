@@ -117,7 +117,12 @@ export function toFullWidthKana(str) {
  * @returns {string} 変換後文字列
  */
 export function toHalfWidth(str) {
-  return toHalfWidthKana(toHalfWidthAlphaNum(str));
+  if (!str) return '';
+  // ひらがなを全角カタカナに変換
+  const val = str.replace(/[\u3041-\u3096]/g, match => 
+    String.fromCharCode(match.charCodeAt(0) + 0x60)
+  );
+  return toHalfWidthKana(toHalfWidthAlphaNum(val));
 }
 
 /**

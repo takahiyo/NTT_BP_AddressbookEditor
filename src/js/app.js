@@ -554,16 +554,22 @@ async function handleMergeNames() {
     let changed = false;
     // 名称の統合 (First + Middle + Last)
     const nameParts = [row.firstName, row.middleName, row.lastName].map(s => (s || '').trim()).filter(s => s);
-    if (nameParts.length > 1) {
-      row.firstName = nameParts.join(' ');
+    const joinedName = nameParts.join(' ');
+    
+    // 現在の First Name と異なる、または Middle/Last に値が残っている場合に反映
+    if (row.firstName !== joinedName || (row.middleName || '').trim() || (row.lastName || '').trim()) {
+      row.firstName = joinedName;
       row.middleName = '';
       row.lastName = '';
       changed = true;
     }
+
     // フリガナの統合
     const yomiParts = [row.phoneticFirstName, row.phoneticMiddleName, row.phoneticLastName].map(s => (s || '').trim()).filter(s => s);
-    if (yomiParts.length > 1) {
-      row.phoneticFirstName = yomiParts.join(' ');
+    const joinedYomi = yomiParts.join(' ');
+    
+    if (row.phoneticFirstName !== joinedYomi || (row.phoneticMiddleName || '').trim() || (row.phoneticLastName || '').trim()) {
+      row.phoneticFirstName = joinedYomi;
       row.phoneticMiddleName = '';
       row.phoneticLastName = '';
       changed = true;
