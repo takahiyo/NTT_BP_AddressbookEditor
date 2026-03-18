@@ -364,12 +364,20 @@ async function loadFile(file) {
       }
     }
 
-    const { header, rows, encoding } = result;
+    const { header, rows, encoding, dynamicColumns } = result;
     state.csvHeader = header;
     state.detectedEncoding = encoding;
 
-    /* カラム定義に基づいてデータをマッピング */
-    let data = mapRowsToObjects(rows, activeSpec.columns);
+    /* カラム定義に基づいてデータをマッピング（Google形式等の動的カラムを優先） */
+    const columns = dynamicColumns || activeSpec.columns;
+    let data = mapRowsToObjects(rows, columns);
+
+    /* --- [SPECIAL] Google連絡先などのインポート時は内部モデル形式に変換 --- */
+    if (activeSpec.id === 'google') {
+        const conversion = convertBetweenModels(data, activeSpec, activeSpec); // 自分自身への変換で特殊ロジックを走らせる
+        data = conversion.data;
+        conversion.warnings.forEach(w => showToast(w, 'info'));
+    }
 
     /* 電話番号とアイコン・属性の不整合をチェック */
     const { data: normalizedData, changedCount } = normalizePhoneInconsistencies(data, activeSpec);
