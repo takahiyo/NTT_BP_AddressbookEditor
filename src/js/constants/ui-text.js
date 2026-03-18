@@ -28,6 +28,7 @@ export const UI_TEXT = {
     EXPORT_CSV: 'CSV書出',
     ADD_ROW: '行追加',
     DELETE_ROW: '行削除',
+    MERGE_GOOGLE_NAMES: '名前を統合',
     VALIDATE_ALL: '全検証',
     CONVERT_HALFWIDTH: '→半角',
     CONVERT_FULLWIDTH: '→全角',
@@ -84,7 +85,7 @@ export const UI_TEXT = {
     CITY_CODE_DESC: '市外局番を指定してください（AB-J変換用）',
     BTN_EXECUTE_CONVERT: '変換実行',
 
-
+    CONFIRM_MERGE_NAMES: '選択した {count} 件の名前を目的に応じて統合しますか？\n(First, Middle, Last を結合して一つにまとめます)',
     CONFIRM_DELETE: '選択した{count}行を削除してよろしいですか？',
     CONFIRM_TRUNCATE: '超過文字を一括カットします。よろしいですか？',
     CONFIRM_NORMALIZE_PHONE: '電話番号とアイコン・発信属性の不整合が {count} 件見つかりました。\nこれらを初期値(1)に補正して読み込みますか？\n（[キャンセル] を選ぶとそのまま読み込みます）',
@@ -109,6 +110,7 @@ export const UI_TEXT = {
     CONVERT_COMPLETE: '変換完了（{count}セル）',
     NORMALIZE_SUCCESS: 'アイコン番号を正規化しました（{count}箇所）',
     TRUNCATE_COMPLETE: '超過カット完了（{count}セル）',
+    MERGE_NAMES_SUCCESS: '名前を統合しました（{count}件）',
     EMPTY_ROWS_DELETED: '空行を{count}件削除しました',
     GAIJI_SAVED: '外字設定を保存しました',
     NO_DATA: 'データがありません',

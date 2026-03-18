@@ -59,23 +59,49 @@ export function convertBetweenModels(data, sourceSpec, targetSpec) {
 
       // 電話番号とタイプ（アイコン）のマッピング
       for (let i = 1; i <= 4; i++) {
-          const val = row[`phone${i}Value`];
-          const type = row[`phone${i}Type`];
-          if (val) {
-              row[`phone${i}`] = val.replace(/[^\d+*#]/g, ''); // 記号除去
-              
-              // アイコンマッピング
-              let iconCode = '1'; // Default
-              const t = (type || '').toLowerCase();
-              if (t.includes('mobile') || t.includes('携帯') || t.includes('cell') || t.includes('iphone')) iconCode = '2';
-              else if (t.includes('home') || t.includes('自宅')) iconCode = '4';
-              else if (t.includes('work') || t.includes('勤務先') || t.includes('office')) iconCode = '3';
-              else if (t.includes('fax') || t.includes('ファクス')) iconCode = '7';
-              else if (t.includes('main') || t.includes('代表')) iconCode = '5';
-              
-              row[`icon${i}`] = iconCode;
-              row[`dialAttr${i}`] = '1'; // デフォルト発信
+        const val = row[`phone${i}Value`];
+        const type = row[`phone${i}Type`];
+        
+        if (val) {
+          /* [NEW] ::: や 改行、セミコロンなどで区切られた複数の番号が含まれている場合を考慮 */
+          const numbers = val.split(/[;:\n\r]+/).map(s => s.trim()).filter(s => s);
+          
+          if (numbers.length > 0) {
+            // 1番目の番号を現在のスロットに設定
+            row[`phone${i}`] = numbers[0].replace(/[^\d+*#]/g, '');
+            
+            // アイコンマッピング（共通関数化したいが、ここではインラインで記述）
+            const getIconCode = (t) => {
+              const lowerT = (t || '').toLowerCase();
+              if (lowerT.includes('mobile') || lowerT.includes('携帯') || lowerT.includes('cell') || lowerT.includes('iphone')) return '2';
+              if (lowerT.includes('home') || lowerT.includes('自宅')) return '4';
+              if (lowerT.includes('work') || lowerT.includes('勤務先') || lowerT.includes('office')) return '3';
+              if (lowerT.includes('fax') || lowerT.includes('ファクス')) return '7';
+              if (lowerT.includes('main') || lowerT.includes('代表')) return '5';
+              return '1';
+            };
+
+            row[`icon${i}`] = getIconCode(type);
+            row[`dialAttr${i}`] = '1';
+
+            // 2番目以降の番号があれば、空いている電話番号スロットを探して展開
+            if (numbers.length > 1) {
+              let nextSlot = i + 1;
+              for (let j = 1; j < numbers.length && nextSlot <= 4; j++) {
+                // すでにデータがあるスロットは飛ばす
+                while (nextSlot <= 4 && (row[`phone${nextSlot}Value`] || row[`phone${nextSlot}`])) {
+                  nextSlot++;
+                }
+                if (nextSlot <= 4) {
+                  row[`phone${nextSlot}`] = numbers[j].replace(/[^\d+*#]/g, '');
+                  row[`icon${nextSlot}`] = getIconCode(type); // 種別は1つ目のものを使用
+                  row[`dialAttr${nextSlot}`] = '1';
+                  nextSlot++;
+                }
+              }
+            }
           }
+        }
       }
     }
 

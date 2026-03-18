@@ -146,6 +146,10 @@ function initSpecs() {
     state.tableEditor.setMappingSpec(newSpec);
 
     updateToolbarState(state.toolbarButtons, convertedData.length > 0);
+    
+    /* [NEW] 名前統合ボタンの表示制御のため再度呼ぶ */
+    updateToolbarState(state.toolbarButtons, convertedData.length > 0);
+    
     runValidation();
     updateStatusBar();
   });
@@ -269,8 +273,8 @@ function initToolbarUI() {
     onPhoneProcess: handlePhoneProcess,
     onFurigana: handleFurigana,
     onNormalizeIcons: handleNormalizeIcons,
-    onFuriganaMappingToggle: handleFuriganaMappingMasterToggle,
     onFuriganaMappingEditor: handleFuriganaMappingEditor,
+    onMergeNames: handleMergeNames,
   });
 
 
@@ -527,6 +531,63 @@ async function handleDeleteRow() {
     log.info('行を削除', { count: selected.length });
     runValidation();
     updateStatusBar();
+  }
+}
+
+/** Google連絡先の名前統合ハンドラ */
+async function handleMergeNames() {
+  const selectedIndices = state.tableEditor.getSelectedRowIndices();
+  const allData = state.tableEditor.getData();
+  const targets = selectedIndices.length > 0 
+    ? selectedIndices.map(i => allData[i])
+    : allData;
+
+  if (targets.length === 0) return;
+
+  const ok = await confirmDialog(formatText(UI_TEXT.MODAL.CONFIRM_MERGE_NAMES, { count: targets.length }));
+  if (!ok) return;
+
+  let changedCount = 0;
+  const newData = [...allData];
+
+  const processRow = (row) => {
+    let changed = false;
+    // 名称の統合 (First + Middle + Last)
+    const nameParts = [row.firstName, row.middleName, row.lastName].map(s => (s || '').trim()).filter(s => s);
+    if (nameParts.length > 1) {
+      row.firstName = nameParts.join(' ');
+      row.middleName = '';
+      row.lastName = '';
+      changed = true;
+    }
+    // フリガナの統合
+    const yomiParts = [row.phoneticFirstName, row.phoneticMiddleName, row.phoneticLastName].map(s => (s || '').trim()).filter(s => s);
+    if (yomiParts.length > 1) {
+      row.phoneticFirstName = yomiParts.join(' ');
+      row.phoneticMiddleName = '';
+      row.phoneticLastName = '';
+      changed = true;
+    }
+    return changed;
+  };
+
+  if (selectedIndices.length > 0) {
+    selectedIndices.forEach(idx => {
+      if (processRow(newData[idx])) changedCount++;
+    });
+  } else {
+    newData.forEach(row => {
+      if (processRow(row)) changedCount++;
+    });
+  }
+
+  if (changedCount > 0) {
+    state.tableEditor.updateData(newData);
+    runValidation();
+    showToast(formatText(UI_TEXT.TOAST.MERGE_NAMES_SUCCESS, { count: changedCount }), 'success');
+    log.info('名前統合完了', { count: changedCount });
+  } else {
+    showToast('統合が必要な行はありませんでした', 'info');
   }
 }
 

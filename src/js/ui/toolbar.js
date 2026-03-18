@@ -92,6 +92,7 @@ export function initToolbar(container, handlers) {
   const rowDrop = createDropdown(UI_TEXT.TOOLBAR.CATEGORIES.EDIT_ROW, '📝');
   rowDrop.menu.appendChild(createButton('btn-add-row', UI_TEXT.TOOLBAR.ADD_ROW, '➕', 'secondary', handlers.onAddRow));
   rowDrop.menu.appendChild(createButton('btn-delete-row', UI_TEXT.TOOLBAR.DELETE_ROW, '🗑️', 'secondary', handlers.onDeleteRow));
+  rowDrop.menu.appendChild(createButton('btn-merge-names', UI_TEXT.TOOLBAR.MERGE_GOOGLE_NAMES, '🔗', 'secondary', handlers.onMergeNames));
   rowDrop.menu.appendChild(createButton('btn-delete-empty', UI_TEXT.TOOLBAR.DELETE_EMPTY_ROWS, '🧹', 'warning', handlers.onDeleteEmpty));
 
   /* === 列編集 === */
@@ -162,10 +163,17 @@ export function updateToolbarState(buttons, hasData) {
     'btn-validate', 'btn-to-half', 'btn-to-full',
     'btn-remove-symbols', 'btn-truncate', 'btn-delete-empty',
     'btn-auto-memory', 'btn-phone-proc', 'btn-furigana', 'btn-normalize-icons',
+    'btn-merge-names',
   ];
   dataRequiredButtons.forEach(id => {
     if (buttons[id]) {
       buttons[id].disabled = !hasData;
     }
   });
+
+  /* 特定の機種のみ有効なボタンの制御 */
+  const inputSpecId = document.getElementById('input-model-select')?.value;
+  if (buttons['btn-merge-names']) {
+    buttons['btn-merge-names'].style.display = inputSpecId === 'google' ? 'flex' : 'none';
+  }
 }
