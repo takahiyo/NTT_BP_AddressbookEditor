@@ -1,9 +1,11 @@
-# 開発・デバッグログ (2026-03-18 15:00)
+# 開発・デバッグログ (2026-03-18 15:05)
 
-## 現在の課題
-- 他機種（A1, ZXH等）を入力、Google連絡先を出力として選択した際、機種変換後のデータが空（またはGoogle固有フィールドに値が入らない）になる。
+## 完了した修正
+- **他機種 → Google連絡先 の変換修正**: 
+  - 内部モデル (`name`, `phone1` 等) が Google 固有フィールド (`firstName`, `phone1Value` 等) にマッピングされるよう `model-converter.js` を更新。
+  - ループ内での空文字による上書きを防止するガードを追加。
+- **Google連絡先 → 他機種 の変換**: 
+  - 電話番号分割と表示用フィールドの更新により、正常動作を確認済み。
 
-## 調査方針
-- `model-converter.js` の `convertBetweenModels` において、`targetSpec.id === 'google'` の場合の処理を追加する。
-- 内部モデルの `name` を `firstName` へ、`phoneX` を `phoneXValue` へマッピングする。
-- Google出力時はインポート時と逆の変換が必要。
+## GitHub同期
+- `dev`, `main`, `master` の各ブランチを強制プッシュにより同期完了。
