@@ -42,17 +42,60 @@ export function convertBetweenModels(data, sourceSpec, targetSpec) {
   /* 変換処理 */
   const convertedData = data.map(row => {
     const newRow = { _rowIndex: row._rowIndex };
-    
+
+    /* --- [SPECIAL] Google連絡先からの入力時の事前処理 --- */
+    if (sourceSpec.id === 'google') {
+      // 姓名結合
+      const lastName = row.lastName || '';
+      const firstName = row.firstName || '';
+      row.name = [lastName, firstName].filter(n => n).join(' ');
+
+      // フリガナ結合（あれば）
+      const pLastName = row.phoneticLastName || '';
+      const pFirstName = row.phoneticFirstName || '';
+      if (pLastName || pFirstName) {
+          row.furigana = [pLastName, pFirstName].filter(n => n).join(' ');
+      }
+
+      // 電話番号とタイプ（アイコン）のマッピング
+      for (let i = 1; i <= 4; i++) {
+          const val = row[`phone${i}Value`];
+          const type = row[`phone${i}Type`];
+          if (val) {
+              row[`phone${i}`] = val.replace(/[^\d+*#]/g, ''); // 記号除去
+              
+              // アイコンマッピング
+              let iconCode = '1'; // Default
+              const t = (type || '').toLowerCase();
+              if (t.includes('mobile') || t.includes('携帯')) iconCode = '2';
+              else if (t.includes('home') || t.includes('自宅')) iconCode = '4';
+              else if (t.includes('work') || t.includes('勤務先') || t.includes('office')) iconCode = '3';
+              else if (t.includes('fax') || t.includes('ファクス')) iconCode = '7';
+              
+              row[`icon${i}`] = iconCode;
+              row[`dialAttr${i}`] = '1'; // デフォルト発信
+          }
+      }
+    }
+
     targetSpec.columns.forEach(col => {
       /* マッピング元のキーを探す（まずkey完全一致、次にlabel一致） */
       const sourceColByKey = sourceSpec.columns.find(c => c.key === col.key);
       let sourceColByLabel = null;
       /* labelが同一であれば引き継ぎ対象とする（例: ZX2SMの「グループ」 -> A1の「グループ」） */
       if (!sourceColByKey) {
-         sourceColByLabel = sourceSpec.columns.find(c => c.label === col.label);
+          /* ヘッダーの別名対応も含めて検索 */
+          sourceColByLabel = sourceSpec.columns.find(c => c.label === col.label);
+          if (!sourceColByLabel && sourceSpec.headerAliases) {
+              const aliasKey = Object.keys(sourceSpec.headerAliases).find(k => k === col.label);
+              if (aliasKey) {
+                  const targetKey = sourceSpec.headerAliases[aliasKey];
+                  sourceColByLabel = sourceSpec.columns.find(c => c.key === targetKey);
+              }
+          }
       }
       
-      const sourceKey = sourceColByKey ? sourceColByKey.key : (sourceColByLabel ? sourceColByLabel.key : null);
+      const sourceKey = sourceColByKey ? sourceColByKey.key : (sourceColByLabel ? sourceColByLabel.key : (row[col.key] !== undefined ? col.key : null));
       const sourceVal = sourceKey ? row[sourceKey] : undefined;
       const fieldInfo = targetSpec.fields?.find(f => f.key === col.key) || {};
       const defaultValue = fieldInfo.defaultValue;
@@ -66,8 +109,12 @@ export function convertBetweenModels(data, sourceSpec, targetSpec) {
           if (targetSpec.iconRange?.allowed) {
             /* 正変換: 1-N -> 固有リストの数値（例: 他機種 -> ZX-L） */
             const sourceIconNum = parseInt(sourceVal, 10);
-            if (!isNaN(sourceIconNum) && sourceIconNum >= 1 && sourceIconNum <= targetSpec.iconRange.allowed.length) {
-              finalVal = targetSpec.iconRange.allowed[sourceIconNum - 1].toString();
+            if (!isNaN(sourceIconNum) && sourceIconNum >= 1 && sourceIconNum <= 9) {
+              /* A1/ZX基準(1-9)をターゲットの固有リストに変換 */
+              const allowedIcons = targetSpec.iconRange.allowed;
+              if (sourceIconNum <= allowedIcons.length) {
+                finalVal = allowedIcons[sourceIconNum - 1].toString();
+              }
             }
           } else if (sourceSpec.iconRange?.allowed) {
             /* 逆変換: 固有リストの数値 -> 1-N（例: ZX-L -> 他機種） */

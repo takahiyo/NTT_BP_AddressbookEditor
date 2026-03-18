@@ -113,8 +113,9 @@ export function detectSpecFromCSV(bytes) {
     f => f === '' || /^\d+$/.test(f.trim())
   );
 
-  /* 1行目がヘッダー（"TEN"で始まる）かどうか */
-  const isHeaderRow = firstFields[0]?.trim().toUpperCase() === 'TEN';
+  /* 1行目がヘッダー（"TEN"で始まるか、Google形式のシグネチャを含む）かどうか */
+  const isHeaderRow = firstFields[0]?.trim().toUpperCase() === 'TEN' || 
+                      firstFields.some(f => f.includes('First Name') || f === '名');
 
   /* 1. まず列数とヘッダー有無の両方が一致する機種を探す */
   for (const spec of allSpecs) {
@@ -191,10 +192,29 @@ export async function parseCSVFile(file, spec, delimiter = ',') {
     const rows = allRows;
     return { header, rows, encoding, detectedSpecId };
   } else {
-    /* 1行目をヘッダーとして分離（デフォルト） */
-    const header = allRows[0];
+    /* 1行目をヘッダーとして分離 */
+    const rawHeader = allRows[0];
     const rows = allRows.slice(1);
-    return { header, rows, encoding, detectedSpecId };
+    
+    /* [SPECIAL] Google連絡先などのエイリアス対応 */
+    let finalColumns = spec.columns;
+    if (spec.headerAliases) {
+        finalColumns = rawHeader.map((label, index) => {
+            const trimmedLabel = label.trim();
+            const aliasKey = spec.headerAliases[trimmedLabel];
+            if (aliasKey) {
+                return { key: aliasKey, label: trimmedLabel };
+            }
+            // 既存の定義からlabelが一致するものを探す
+            const found = spec.columns.find(c => c.label === trimmedLabel);
+            if (found) return found;
+            
+            // どれにも当てはまらない場合は一時的なキーを割り当てる
+            return { key: `_unknown_${index}`, label: trimmedLabel };
+        });
+    }
+
+    return { header: rawHeader, rows, encoding, detectedSpecId, dynamicColumns: finalColumns };
   }
 }
 
@@ -204,9 +224,14 @@ export async function parseCSVFile(file, spec, delimiter = ',') {
  * @param {Array<Object>} columns - 機種仕様のカラム定義
  * @returns {Array<Object>} キー付きオブジェクトの配列
  */
-export function mapRowsToObjects(rows, columns) {
+export function mapRowsToObjects(rows, columns, spec = null) {
   return rows.map((row, rowIndex) => {
     const obj = { _rowIndex: rowIndex };
+    
+    /* Google形式などの場合、ヘッダー名からのエイリアスマッピングを優先する場合があるが、
+       ここでは汎用的にcolumns定義に従う。
+       もしspecにheaderAliasesがある場合、読み込み時にヘッダー行からkeyを特定する処理をparseCSVFile側で行うのが理想。
+    */
     columns.forEach((col, colIndex) => {
       obj[col.key] = colIndex < row.length ? row[colIndex] : '';
     });
