@@ -6,6 +6,7 @@
 
 import { detectEncoding, detectBOM, decodeBytes } from '../utils/encoding.js';
 import { getAllSpecs } from '../models/spec-registry.js';
+import { UI_TEXT } from '../constants/ui-text.js';
 
 /**
  * CSVテキストをパースして2次元配列に変換
@@ -161,9 +162,6 @@ export async function parseCSVFile(file, spec, delimiter = ',') {
   const buffer = await file.arrayBuffer();
   const bytes = new Uint8Array(buffer);
 
-  /* 機種自動判別 */
-  const detectedSpecId = detectSpecFromCSV(bytes);
-
   /* エンコーディング判定 */
   const encoding = detectEncoding(bytes);
 
@@ -174,10 +172,27 @@ export async function parseCSVFile(file, spec, delimiter = ',') {
   const allRows = parseCSVText(text, delimiter);
 
   if (allRows.length === 0) {
-    return { header: [], rows: [], encoding, detectedSpecId };
+    return { header: [], rows: [], encoding, detectedSpecId: null };
   }
 
-  /* 列数の簡易チェック (データ行の先頭最大3行) */
+  /* 機種自動判別 */
+  const detectedSpecId = detectSpecFromCSV(bytes);
+
+  /* 
+   * [ENHANCED VALIDATION]
+   * 自動判別に失敗し、かつ現在選択されている機種の期待する列数とも一致しない場合、
+   * 明らかに非対応のファイルとみなしてエラーを投げる。
+   */
+  if (!detectedSpecId) {
+    const currentExpectedCols = spec.hasHeader === false ? spec.expectedColumns : spec.headerColumns;
+    const firstRowCols = allRows[0]?.length || 0;
+
+    if (currentExpectedCols && firstRowCols !== currentExpectedCols) {
+        throw new Error(UI_TEXT.ERRORS.UNSUPPORTED_MODEL);
+    }
+  }
+
+  /* 列数の簡易チェック（データ行の先頭最大3行） - 選択中の機種に対する既存チェック */
   if (spec.expectedColumns) {
     const rowsToCheck = Math.min(3, allRows.length);
     for (let i = 0; i < rowsToCheck; i++) {
