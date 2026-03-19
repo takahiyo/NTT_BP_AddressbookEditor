@@ -37,8 +37,8 @@ export const ZXL_SPEC = defineSpec({
   hasHeader: false,       // ヘッダーなし
   requirePhoneNumber: true,
   
-  /* 引用符の扱い: 名称、フリガナ、電話番号をトリプル引用符対象とする */
-  tripleQuoteColumns: [
+  /* 出力時に引用符で囲むカラム: 名称、フリガナ、電話番号 */
+  forceQuoteColumns: [
     'name', 'furigana', 
     'phone1', 'phone2', 'phone3', 'phone4'
   ],

@@ -249,7 +249,16 @@ export function mapRowsToObjects(rows, columns, spec = null) {
        もしspecにheaderAliasesがある場合、読み込み時にヘッダー行からkeyを特定する処理をparseCSVFile側で行うのが理想。
     */
     columns.forEach((col, colIndex) => {
-      obj[col.key] = colIndex < row.length ? row[colIndex] : '';
+      let val = colIndex < row.length ? row[colIndex] : '';
+      
+      /* [ENHANCEMENT] 引用符の除去
+       * パサーによって1層剥がされた後も残っている引用符（例: """値""" -> "値"）を除去する
+       */
+      if (typeof val === 'string' && val.startsWith('"') && val.endsWith('"')) {
+        val = val.substring(1, val.length - 1);
+      }
+      
+      obj[col.key] = val;
     });
     return obj;
   });

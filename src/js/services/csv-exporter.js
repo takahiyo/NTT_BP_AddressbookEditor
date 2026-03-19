@@ -26,14 +26,8 @@ export function buildCSVText(header, rows, delimiter = ',', spec = {}) {
     let str = field == null ? '' : String(field);
     const colKey = spec.columns ? spec.columns[colIndex]?.key : null;
     
-    /* トリプルクォート対応（値を引用符で囲み、CSVエスケープでさらに囲むことで """値""" にする） */
-    const isTriple = colKey && spec.tripleQuoteColumns?.includes(colKey);
-    if (isTriple) {
-      str = '"' + str + '"';
-    }
-
-    const forceQuote = colKey && (spec.forceQuoteColumns?.includes(colKey) || isTriple);
-
+    const forceQuote = colKey && spec.forceQuoteColumns?.includes(colKey);
+    
     if (forceQuote || str.includes(delimiter) || str.includes('"') || str.includes('\n') || str.includes('\r')) {
       return '"' + str.replace(/"/g, '""') + '"';
     }
