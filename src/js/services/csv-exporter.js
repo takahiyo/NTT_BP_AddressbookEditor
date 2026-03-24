@@ -58,7 +58,7 @@ export function buildCSVText(header, rows, delimiter = ',', spec = {}) {
  */
 export function objectsToRows(dataObjects, columns, spec = {}) {
   return dataObjects.map((obj, rowIndex) => {
-    /* メモリ番号の自動付与 (ZX-L 等、行番号ベースの場合) */
+    /* メモリ番号の自動付与 (ZX2L 等、行番号ベースの場合) */
     if (spec.autoMemoryNoOnExport) {
         obj.memoryNo = String(rowIndex);
     } else if (spec.skipMemoryNoInCSV && (obj.memoryNo === undefined || obj.memoryNo === '')) {

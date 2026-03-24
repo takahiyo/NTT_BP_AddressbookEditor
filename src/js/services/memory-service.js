@@ -130,7 +130,7 @@ export function padDataToCapacity(data, targetCount, spec, digitMode) {
       if (defVal !== undefined && defVal !== '') {
         newRow[col.key] = defVal;
       } else if (col.key.startsWith('icon')) {
-        /* アイコン番号のデフォルト (zxl等) */
+        /* アイコン番号のデフォルト (zx2l等) */
         newRow[col.key] = spec.iconRange?.default || '1';
       } else if (col.key.startsWith('dialAttr')) {
         /* 発信属性のデフォルト */

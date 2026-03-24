@@ -179,7 +179,7 @@ export function convertBetweenModels(data, sourceSpec, targetSpec) {
         /* アイコン番号の変換ロジック（双方向マッピング） */
         if (col.key.startsWith('icon')) {
           if (targetSpec.iconRange?.allowed) {
-            /* 正変換: 1-N -> 固有リストの数値（例: 他機種 -> ZX-L） */
+            /* 正変換: 1-N -> 固有リストの数値（例: 他機種 -> ZX2L） */
             const sourceIconNum = parseInt(sourceVal, 10);
             if (!isNaN(sourceIconNum) && sourceIconNum >= 1 && sourceIconNum <= 9) {
               /* A1/ZX基準(1-9)をターゲットの固有リストに変換 */
@@ -189,7 +189,7 @@ export function convertBetweenModels(data, sourceSpec, targetSpec) {
               }
             }
           } else if (sourceSpec.iconRange?.allowed) {
-            /* 逆変換: 固有リストの数値 -> 1-N（例: ZX-L -> 他機種） */
+            /* 逆変換: 固有リストの数値 -> 1-N（例: ZX2L -> 他機種） */
             const sourceIconVal = parseInt(sourceVal, 10);
             const index = sourceSpec.iconRange.allowed.indexOf(sourceIconVal);
             if (index !== -1) {

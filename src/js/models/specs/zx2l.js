@@ -1,7 +1,7 @@
 import { defineSpec } from '../base-fields.js';
 
 /**
- * ZX-L 機種仕様定義
+ * ZX2L 機種仕様定義
  */
 
 const PHONE_SLOTS = 4;
@@ -26,9 +26,9 @@ for (let i = 1; i <= PHONE_SLOTS; i++) {
   );
 }
 
-export const ZXL_SPEC = defineSpec({
-  id: 'zxl',
-  name: 'ZX-L',
+export const ZX2L_SPEC = defineSpec({
+  id: 'zx2l',
+  name: 'ZX2L',
   family: 'typeL',
   encoding: 'Shift_JIS',
   inputEncodings: ['Shift_JIS', 'UTF-8'],
