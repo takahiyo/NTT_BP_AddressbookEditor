@@ -123,6 +123,7 @@ export const UI_TEXT = {
   ERRORS: {
     FILE_READ_FAILED: 'ファイルの読み込みに失敗しました',
     INVALID_CSV: '不正なCSV形式です',
+    UNSUPPORTED_MODEL: '選択された機種または対応機種の形式ではありません',
     ENCODING_DETECT_FAILED: 'エンコーディングの判定に失敗しました',
     NO_ROWS_SELECTED: '行が選択されていません',
     DUPLICATE_MEMORY_NO: 'メモリ番号が重複しています',

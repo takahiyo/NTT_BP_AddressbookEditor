@@ -1,7 +1,7 @@
 import { defineSpec } from '../base-fields.js';
 
 /**
- * ZX-L 機種仕様定義
+ * ZX2L 機種仕様定義
  */
 
 const PHONE_SLOTS = 4;
@@ -26,9 +26,9 @@ for (let i = 1; i <= PHONE_SLOTS; i++) {
   );
 }
 
-export const ZXL_SPEC = defineSpec({
-  id: 'zxl',
-  name: 'ZX-L',
+export const ZX2L_SPEC = defineSpec({
+  id: 'zx2l',
+  name: 'ZX2L',
   family: 'typeL',
   encoding: 'Shift_JIS',
   inputEncodings: ['Shift_JIS', 'UTF-8'],
@@ -37,8 +37,8 @@ export const ZXL_SPEC = defineSpec({
   hasHeader: false,       // ヘッダーなし
   requirePhoneNumber: true,
   
-  /* 引用符の扱い: 名称、フリガナ、電話番号をトリプル引用符対象とする */
-  tripleQuoteColumns: [
+  /* 出力時に引用符で囲むカラム: 名称、フリガナ、電話番号 */
+  forceQuoteColumns: [
     'name', 'furigana', 
     'phone1', 'phone2', 'phone3', 'phone4'
   ],

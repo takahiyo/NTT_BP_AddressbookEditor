@@ -167,7 +167,7 @@ function initSpecs() {
     }
 
     /* --- 2. 特定機種向けパディング処理（変換後のレイアウトに基づく） --- */
-    if (newSpec.id === 'a1' || newSpec.id === 'zxl') {
+    if (newSpec.id === 'a1' || newSpec.id === 'zx2l') {
       const targetCount = newSpec.id === 'a1' ? 20000 : 19800;
       const currentCount = convertedData.length;
 
@@ -358,6 +358,13 @@ async function loadFile(file) {
         const inputSelect = document.getElementById('input-model-select');
         if (inputSelect) inputSelect.value = detectedSpec.id;
 
+        /* 出力機種も同期して切替 */
+        state.outputSpec = detectedSpec;
+        const outputSelect = document.getElementById('output-model-select');
+        if (outputSelect) outputSelect.value = detectedSpec.id;
+        updateDigitModeSelect(detectedSpec);
+        state.tableEditor.setMappingSpec(detectedSpec);
+
         /* テーブルのカラム定義を更新 */
         state.tableEditor.setSpec(detectedSpec);
 
@@ -464,8 +471,8 @@ async function handleExport() {
     result.warnings.forEach(w => showToast(w, 'info'));
   }
 
-  /* 行数不足のチェック（A1: 20000, ZX-L: 19800） */
-  if (exportSpec.id === 'a1' || exportSpec.id === 'zxl') {
+  /* 行数不足のチェック（A1: 20000, ZX2L: 19800） */
+  if (exportSpec.id === 'a1' || exportSpec.id === 'zx2l') {
     const targetCount = exportSpec.id === 'a1' ? 20000 : 19800;
     if (exportData.length < targetCount) {
       const msg = formatText(UI_TEXT.MODAL.CONFIRM_PAD_CAPACITY, { 

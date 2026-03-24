@@ -6,7 +6,7 @@
 
 import { ZX2SM_SPEC } from './specs/zx2sm.js';
 import { A1_SPEC } from './specs/a1.js';
-import { ZXL_SPEC } from './specs/zxl.js';
+import { ZX2L_SPEC } from './specs/zx2l.js';
 import { ZXH_SPEC } from './specs/zxh.js';
 import { GOOGLE_SPEC } from './specs/google.js';
 
@@ -28,7 +28,7 @@ function register(spec) {
 /* === 初期登録 === */
 register(ZX2SM_SPEC);
 register(A1_SPEC);
-register(ZXL_SPEC);
+register(ZX2L_SPEC);
 register(ZXH_SPEC);
 register(GOOGLE_SPEC);
 /* 新機種追加例:
