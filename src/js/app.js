@@ -358,6 +358,13 @@ async function loadFile(file) {
         const inputSelect = document.getElementById('input-model-select');
         if (inputSelect) inputSelect.value = detectedSpec.id;
 
+        /* 出力機種も同期して切替 */
+        state.outputSpec = detectedSpec;
+        const outputSelect = document.getElementById('output-model-select');
+        if (outputSelect) outputSelect.value = detectedSpec.id;
+        updateDigitModeSelect(detectedSpec);
+        state.tableEditor.setMappingSpec(detectedSpec);
+
         /* テーブルのカラム定義を更新 */
         state.tableEditor.setSpec(detectedSpec);
 
