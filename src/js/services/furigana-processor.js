@@ -101,8 +101,30 @@ export async function processAllFurigana(data, spec) {
   // 1. 重複を除いた漢字名称リストを作成（API節約と効率化のため）
   const uniqueNames = [...new Set(data.map(row => row[nameKey]).filter(n => n && /[\u4E00-\u9FFF]/.test(n)))];
   
-  // 2. API を叩いて一括取得
-  const apiReadings = uniqueNames.length > 0 ? await fetchFuriganaFromAPI(uniqueNames) : {};
+  // 2. API をチャンクに分割して一括取得（1回あたり50件に抑えて Yahoo API や Workers の制限を回避）
+  const apiReadings = {};
+  if (uniqueNames.length > 0) {
+    const CHUNK_SIZE = 50;
+    log.info(`一括APIリクエスト分割処理を開始します: ユニーク漢字数 ${uniqueNames.length} 件、チャンクサイズ ${CHUNK_SIZE}`);
+    
+    for (let i = 0; i < uniqueNames.length; i += CHUNK_SIZE) {
+      const chunk = uniqueNames.slice(i, i + CHUNK_SIZE);
+      const startNum = i + 1;
+      const endNum = Math.min(i + CHUNK_SIZE, uniqueNames.length);
+      
+      log.info(`チャンク送信中: ${startNum}〜${endNum} 件 / 全 ${uniqueNames.length} 件`);
+      
+      try {
+        const readings = await fetchFuriganaFromAPI(chunk);
+        Object.assign(apiReadings, readings);
+      } catch (err) {
+        log.error(`チャンク ${startNum}〜${endNum} 件の処理中にエラーが発生しました`, { error: err.message });
+        throw err; // エラーはサイレントに無視せず、上位に伝搬させて全体の通信失敗として処理する
+      }
+    }
+    
+    log.info('全チャンクのAPIフリガナ取得を完了しました');
+  }
 
   // 3. 各行に適用
   data.forEach((row, index) => {
