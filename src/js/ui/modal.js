@@ -216,68 +216,85 @@ export function showFuriganaReviewModal(results) {
 
     const desc = document.createElement('p');
     desc.textContent = UI_TEXT.MODAL.FURIGANA_REVIEW_DESC;
-    desc.style.marginBottom = '12px';
+    desc.style.marginBottom = '8px';
     desc.style.color = 'var(--color-text-secondary)';
+    desc.style.fontSize = '12px';
     container.appendChild(desc);
 
-    // --- 高機能フィルタパネルの作成 ---
+    // --- 超コンパクトな1行フィルタパネルの作成 ---
     const filterPanel = document.createElement('div');
+    filterPanel.className = 'furigana-filters';
     filterPanel.style.display = 'flex';
-    filterPanel.style.flexWrap = 'wrap';
+    filterPanel.style.alignItems = 'center';
     filterPanel.style.gap = '12px';
-    filterPanel.style.marginBottom = '12px';
-    filterPanel.style.padding = '10px';
+    filterPanel.style.marginBottom = '8px';
+    filterPanel.style.padding = '6px 10px';
     filterPanel.style.background = 'var(--color-bg-secondary)';
     filterPanel.style.borderRadius = '6px';
     filterPanel.style.border = '1px solid var(--color-border)';
+    filterPanel.style.fontSize = '12px';
+    filterPanel.style.flexWrap = 'wrap';
 
-    // 1. 文字列検索
-    const searchDiv = document.createElement('div');
-    searchDiv.style.flex = '1';
-    searchDiv.style.minWidth = '160px';
-    searchDiv.innerHTML = `
-      <label style="display: block; font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px;">文字列検索</label>
-      <input type="text" id="furigana-search-input" class="gaiji-editor" style="height: 32px; width: 100%; font-size: 13px; padding: 4px 8px; border-radius: 4px;" placeholder="名前やフリガナで検索">
-    `;
-    filterPanel.appendChild(searchDiv);
-
-    // 2. メモリ番号範囲
-    const memDiv = document.createElement('div');
-    memDiv.style.display = 'flex';
-    memDiv.style.gap = '6px';
-    memDiv.style.alignItems = 'center';
-    memDiv.style.minWidth = '200px';
-    memDiv.innerHTML = `
-      <div>
-        <label style="display: block; font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px;">開始 No.</label>
-        <input type="text" id="furigana-mem-start" class="gaiji-editor" style="height: 32px; width: 75px; font-size: 13px; text-align: center; padding: 4px; border-radius: 4px;" placeholder="000">
-      </div>
-      <span style="margin-top: 18px; color: var(--color-text-secondary);">〜</span>
-      <div>
-        <label style="display: block; font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px;">終了 No.</label>
-        <input type="text" id="furigana-mem-end" class="gaiji-editor" style="height: 32px; width: 75px; font-size: 13px; text-align: center; padding: 4px; border-radius: 4px;" placeholder="999">
-      </div>
-    `;
-    filterPanel.appendChild(memDiv);
-
-    // 3. 表示条件 (状態フィルタ)
+    // 1. 表示条件 (すべて / 変更あり / 同一のみ)
     const statusDiv = document.createElement('div');
-    statusDiv.style.minWidth = '220px';
+    statusDiv.style.display = 'flex';
+    statusDiv.style.alignItems = 'center';
+    statusDiv.style.gap = '8px';
     statusDiv.innerHTML = `
-      <label style="display: block; font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px;">表示条件</label>
-      <div style="display: flex; gap: 10px; margin-top: 6px;">
-        <label style="display: flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer; color: var(--color-text);">
-          <input type="radio" name="furigana-status" value="changes" checked> 変更あり
+      <span style="color: var(--color-text-secondary); font-weight: 500; white-space: nowrap;">表示条件:</span>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <label style="display: flex; align-items: center; gap: 3px; cursor: pointer; color: var(--color-text); margin: 0; white-space: nowrap;">
+          <input type="radio" name="furigana-status" value="all" checked style="margin: 0; transform: scale(0.9);"> すべて
         </label>
-        <label style="display: flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer; color: var(--color-text);">
-          <input type="radio" name="furigana-status" value="sames"> 同一のみ
+        <label style="display: flex; align-items: center; gap: 3px; cursor: pointer; color: var(--color-text); margin: 0; white-space: nowrap;">
+          <input type="radio" name="furigana-status" value="changes" style="margin: 0; transform: scale(0.9);"> 変更あり
         </label>
-        <label style="display: flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer; color: var(--color-text);">
-          <input type="radio" name="furigana-status" value="all"> すべて
+        <label style="display: flex; align-items: center; gap: 3px; cursor: pointer; color: var(--color-text); margin: 0; white-space: nowrap;">
+          <input type="radio" name="furigana-status" value="sames" style="margin: 0; transform: scale(0.9);"> 同一のみ
         </label>
       </div>
     `;
     filterPanel.appendChild(statusDiv);
+
+    // 縦仕切り線 1
+    const divider1 = document.createElement('div');
+    divider1.style.width = '1px';
+    divider1.style.height = '16px';
+    divider1.style.background = 'var(--color-border)';
+    filterPanel.appendChild(divider1);
+
+    // 2. 文字列検索
+    const searchDiv = document.createElement('div');
+    searchDiv.style.display = 'flex';
+    searchDiv.style.alignItems = 'center';
+    searchDiv.style.gap = '6px';
+    searchDiv.style.flex = '1';
+    searchDiv.style.minWidth = '150px';
+    searchDiv.innerHTML = `
+      <span style="color: var(--color-text-secondary); font-weight: 500; white-space: nowrap;">検索:</span>
+      <input type="text" id="furigana-search-input" style="height: 26px; padding: 2px 6px; font-size: 12px; flex: 1; box-sizing: border-box; background: var(--color-bg-primary); border: 1px solid var(--color-border); border-radius: 4px; color: var(--color-text-primary);" placeholder="名前/フリガナで検索...">
+    `;
+    filterPanel.appendChild(searchDiv);
+
+    // 縦仕切り線 2
+    const divider2 = document.createElement('div');
+    divider2.style.width = '1px';
+    divider2.style.height = '16px';
+    divider2.style.background = 'var(--color-border)';
+    filterPanel.appendChild(divider2);
+
+    // 3. メモリ番号範囲
+    const memDiv = document.createElement('div');
+    memDiv.style.display = 'flex';
+    memDiv.style.alignItems = 'center';
+    memDiv.style.gap = '4px';
+    memDiv.innerHTML = `
+      <span style="color: var(--color-text-secondary); font-weight: 500; white-space: nowrap;">メモリNo:</span>
+      <input type="text" id="furigana-mem-start" style="height: 26px; width: 50px; font-size: 12px; text-align: center; padding: 2px; box-sizing: border-box; background: var(--color-bg-primary); border: 1px solid var(--color-border); border-radius: 4px; color: var(--color-text-primary);" placeholder="000">
+      <span style="color: var(--color-text-secondary); margin: 0 2px;">〜</span>
+      <input type="text" id="furigana-mem-end" style="height: 26px; width: 50px; font-size: 12px; text-align: center; padding: 2px; box-sizing: border-box; background: var(--color-bg-primary); border: 1px solid var(--color-border); border-radius: 4px; color: var(--color-text-primary);" placeholder="999">
+    `;
+    filterPanel.appendChild(memDiv);
     container.appendChild(filterPanel);
 
     // --- ページネーションパネルの作成 ---
@@ -285,14 +302,14 @@ export function showFuriganaReviewModal(results) {
     paginationPanel.style.display = 'flex';
     paginationPanel.style.justifyContent = 'space-between';
     paginationPanel.style.alignItems = 'center';
-    paginationPanel.style.marginBottom = '8px';
+    paginationPanel.style.marginBottom = '6px';
     paginationPanel.style.fontSize = '12px';
     paginationPanel.innerHTML = `
       <span id="furigana-pagination-info" style="color: var(--color-text-secondary);">全 0 件中 0〜0 件を表示</span>
       <div style="display: flex; gap: 8px; align-items: center;">
-        <button id="furigana-page-prev" class="toolbar__btn" style="height: 28px; padding: 0 10px; font-size: 12px; border-radius: 4px; cursor: pointer;">前へ</button>
+        <button id="furigana-page-prev" class="toolbar__btn" style="height: 26px; padding: 0 10px; font-size: 12px; border-radius: 4px; cursor: pointer;">前へ</button>
         <span id="furigana-page-indicator" style="font-weight: 500;">1 / 1 ページ</span>
-        <button id="furigana-page-next" class="toolbar__btn" style="height: 28px; padding: 0 10px; font-size: 12px; border-radius: 4px; cursor: pointer;">次へ</button>
+        <button id="furigana-page-next" class="toolbar__btn" style="height: 26px; padding: 0 10px; font-size: 12px; border-radius: 4px; cursor: pointer;">次へ</button>
       </div>
     `;
     container.appendChild(paginationPanel);
@@ -300,6 +317,7 @@ export function showFuriganaReviewModal(results) {
     // --- テーブルの作成 ---
     const tableWrapper = document.createElement('div');
     tableWrapper.className = 'modal-table-wrapper';
+    tableWrapper.style.maxHeight = '56vh'; // 画面の高さに合わせてスクロール領域を最大化！
     
     const table = document.createElement('table');
     table.className = 'modal-table';
@@ -308,8 +326,8 @@ export function showFuriganaReviewModal(results) {
     const thead = document.createElement('thead');
     thead.innerHTML = `
       <tr>
-        <th><input type="checkbox" id="furigana-check-all"></th>
-        <th style="width: 80px;">メモリNo</th>
+        <th style="width: 40px; text-align: center;"><input type="checkbox" id="furigana-check-all"></th>
+        <th style="width: 80px; text-align: center;">メモリNo</th>
         <th>${UI_TEXT.MODAL.FURIGANA_COL_NAME}</th>
         <th>${UI_TEXT.MODAL.FURIGANA_COL_CURRENT}</th>
         <th>${UI_TEXT.MODAL.FURIGANA_COL_GENERATED}</th>
@@ -424,7 +442,7 @@ export function showFuriganaReviewModal(results) {
         const isSameBadge = item.isSame ? '<span style="display: inline-block; padding: 1px 5px; font-size: 10px; background: var(--color-border); border-radius: 4px; margin-left: 6px; color: var(--color-text-secondary);">同一</span>' : '';
 
         tr.innerHTML = `
-          <td><input type="checkbox" class="furigana-row-check" data-index="${item.index}" ${item.checked ? 'checked' : ''}></td>
+          <td style="text-align: center;"><input type="checkbox" class="furigana-row-check" data-index="${item.index}" ${item.checked ? 'checked' : ''}></td>
           <td style="text-align: center; font-family: monospace;">${item.memoryNo || '-'}</td>
           <td class="cell-name">${item.name}${isSameBadge}</td>
           <td class="cell-current">${currentVal}</td>
@@ -483,14 +501,9 @@ export function showFuriganaReviewModal(results) {
       renderTable();
     });
 
-    // ヘッダーの全選択・解除 (現在の表示フィルタに該当する全アイテムの状態を変更)
+    // ヘッダーの全選択・解除 (現在の表示フィルターに該当する全アイテムの状態を変更)
     const checkAll = container.querySelector('#furigana-check-all');
     checkAll.addEventListener('change', () => {
-      const searchQuery = container.querySelector('#furigana-search-input').value.trim().toLowerCase();
-      const memStart = container.querySelector('#furigana-mem-start').value.trim();
-      const memEnd = container.querySelector('#furigana-mem-end').value.trim();
-      const statusFilter = container.querySelector('input[name="furigana-status"]:checked').value;
-
       // 現在のフィルターに該当する全アイテムに対してチェック状態を適用
       filteredItems.forEach(item => {
         item.checked = checkAll.checked;
@@ -517,7 +530,7 @@ export function showFuriganaReviewModal(results) {
           label: UI_TEXT.MODAL.BTN_APPLY,
           style: 'primary',
           onClick: () => {
-            // checked フラグが立っているもののみをフィルタリングして反映する
+            // checked フラグが立っているもののみをフィルターして反映する
             const selected = results.filter(item => item.checked);
             close();
             resolve(selected);
@@ -525,5 +538,22 @@ export function showFuriganaReviewModal(results) {
         },
       ],
     });
+
+    // モーダル表示後の上下余白圧縮・サイズ最大化・パディング調整
+    setTimeout(() => {
+      const overlay = document.getElementById('modal-overlay');
+      if (overlay) {
+        const modalElement = overlay.querySelector('.modal');
+        if (modalElement) {
+          modalElement.style.maxWidth = '850px'; // 横幅を広げる
+          modalElement.style.maxHeight = '92vh'; // 上下の余白を極小にして縦幅を拡大
+          modalElement.style.width = '95%';
+        }
+        const bodyElement = overlay.querySelector('.modal__body');
+        if (bodyElement) {
+          bodyElement.style.padding = '10px 16px'; // パディングを小さくして余白を完全に節約
+        }
+      }
+    }, 10);
   });
 }
