@@ -6,15 +6,45 @@
 import { toHalfWidthKana, removeSymbols } from './converter.js';
 import { createLogger } from '../utils/logger.js';
 import { furiganaMappingService } from './furigana-mapping-service.js';
+import { APP_CONFIG } from '../constants/app-config.js';
 
 const log = createLogger('furigana');
 
-// --- Worker API設定（デプロイ後にURLを書き換えてください） ---
-const WORKER_API_URL = "https://furigana-api.taka-hiyo.workers.dev/api/furigana";
-
-/* ============================================
- * 英数字→カタカナ読み マッピング
- * ============================================ */
+/**
+ * 外部 Worker API を呼び出してフリガナを一括取得
+ * @param {Array<string>} names - 漢字名称の配列
+ * @returns {Promise<Object>} { 漢字: 読み } のオブジェクト
+ */
+async function fetchFuriganaFromAPI(names) {
+  const url = APP_CONFIG.FURIGANA_API.URL;
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ names })
+    });
+    
+    if (!response.ok) {
+      let errorDetail = `HTTP ${response.status}`;
+      try {
+        const errData = await response.json();
+        if (errData && errData.error) {
+          errorDetail += ` - ${errData.error}`;
+        }
+      } catch (_) {
+        // レスポンスが JSON でない場合はステータスコードのみ使用
+      }
+      throw new Error(errorDetail);
+    }
+    
+    const data = await response.json();
+    return data.readings || {};
+  } catch (err) {
+    log.error('Worker API との通信に失敗', { url, error: err.message });
+    // サイレントに無視せず、上位（UI側）へ明確な例外をスローして警告する
+    throw new Error(`フリガナAPI接続エラー (URL: ${url}): ${err.message}`);
+  }
+}
 const ALPHANUM_TO_KANA = {
   'A': 'エー', 'B': 'ビー', 'C': 'シー', 'D': 'ディー', 'E': 'イー',
   'F': 'エフ', 'G': 'ジー', 'H': 'エイチ', 'I': 'アイ', 'J': 'ジェー',
@@ -37,28 +67,6 @@ const ALPHANUM_TO_KANA = {
   '５': 'ゴ', '６': 'ロク', '７': 'ナナ', '８': 'ハチ', '９': 'キュウ',
 };
 
-/**
- * 外部 Worker API を呼び出してフリガナを一括取得
- * @param {Array<string>} names - 漢字名称の配列
- * @returns {Promise<Object>} { 漢字: 読み } のオブジェクト
- */
-async function fetchFuriganaFromAPI(names) {
-  try {
-    const response = await fetch(WORKER_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ names })
-    });
-    
-    if (!response.ok) throw new Error(`API error: ${response.status}`);
-    
-    const data = await response.json();
-    return data.readings || {};
-  } catch (err) {
-    log.error('Worker API との通信に失敗', { error: err.message });
-    return {};
-  }
-}
 
 /**
  * ローカルで解決可能なフリガナ（英数字・かな）を生成

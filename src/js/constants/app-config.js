@@ -13,6 +13,11 @@ export const APP_CONFIG = {
   /** デフォルト桁数モード */
   DEFAULT_DIGIT_MODE: '3digit',
 
+  /** フリガナ生成 API 設定 */
+  FURIGANA_API: {
+    URL: 'https://furigana-api.taka-hiyo.workers.dev/api/furigana',
+  },
+
   /** CSVパース設定 */
   CSV: {
     /** デフォルトの区切り文字 */
