@@ -1,7 +1,7 @@
 import { defineSpec } from '../base-fields.js';
 
 /**
- * ZX2SM 機種仕様定義
+ * ZX-SMH (ZX2-SM & ZX-Home 統合) 機種仕様定義
  */
 
 const PHONE_SLOTS = 4;
@@ -17,21 +17,22 @@ const items = [
 /* 電話番号スロット (1-4) を追加 */
 for (let i = 1; i <= PHONE_SLOTS; i++) {
   items.push(
-    { key: `phone${i}`,     label: `電話番号 ${i}`,   type: 'phone', width: 'col-phone',     constraints: { maxBytes: 32, unit: 'byte', onOverflow: 'autoCut', onInvalidChar: 'error' } },
-    { key: `icon${i}`,      label: `アイコン ${i}`,   type: 'number', width: 'col-icon',     defaultValue: '1' },
-    { key: `dialAttr${i}`,  label: `発信属性 ${i}`,   type: 'number', width: 'col-dial-attr', defaultValue: '1' }
+    { key: `phone${i}`,     label: `電話番号(${i})`,   type: 'phone', width: 'col-phone',     constraints: { maxBytes: 32, unit: 'byte', onOverflow: 'autoCut', onInvalidChar: 'error' } },
+    { key: `icon${i}`,      label: `アイコン番号(${i})`,   type: 'number', width: 'col-icon',     defaultValue: '1' },
+    { key: `dialAttr${i}`,  label: `発信番号属性(${i})`,   type: 'number', width: 'col-dial-attr', defaultValue: '1' }
   );
 }
 
-export const ZX2SM_SPEC = defineSpec({
-  id: 'zx2sm',
-  name: 'ZX2SM',
-  family: 'typeSM',
+export const ZXSMH_SPEC = defineSpec({
+  id: 'zxsmh',
+  name: 'ZX-SMH',
+  family: 'typeSMH',
   encoding: 'Shift_JIS',
   inputEncodings: ['Shift_JIS', 'UTF-8', 'UTF-16'],
   phoneNumberSlots: PHONE_SLOTS,
   /* 1行目をヘッダーとして扱う */
   headerColumns: 17,
+  headerSignature: '電話番号(1)',
   requirePhoneNumber: true,
   
   /* TEN番号の範囲 (0-40) */
@@ -84,8 +85,8 @@ export const ZX2SM_SPEC = defineSpec({
   },
 
   systemCapacity: {
+    typeH: { '2digit': 80,    '3digit': 800 },
     typeS: { '2digit': 280,   '3digit': 2800,  '4digit': 11800 },
     typeM: { '2digit': 880,   '3digit': 8800,  '4digit': 17800 },
   },
 }, items);
-

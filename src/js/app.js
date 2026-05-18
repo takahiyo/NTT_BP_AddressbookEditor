@@ -154,62 +154,17 @@ function initSpecs() {
     updateStatusBar();
   });
 
-  outputSelect.addEventListener('change', async () => {
+  outputSelect.addEventListener('change', () => {
     const newSpec = getSpec(outputSelect.value);
+    log.info('出力機種を変更', { from: state.outputSpec?.id, to: newSpec?.id });
 
-    /* --- 1. 出力機種に合わせてデータを変換（レイアウト変更） --- */
-    const currentData = state.tableEditor.getData();
-    let convertedData = currentData;
-    if (state.inputSpec.id !== newSpec.id && currentData.length > 0) {
-      const result = convertBetweenModels(currentData, state.inputSpec, newSpec);
-      convertedData = result.data;
-      result.warnings.forEach(w => showToast(w, 'info'));
-    }
-
-    /* --- 2. 特定機種向けパディング処理（変換後のレイアウトに基づく） --- */
-    if (newSpec.id === 'a1' || newSpec.id === 'zx2l') {
-      const targetCount = newSpec.id === 'a1' ? 20000 : 19800;
-      const currentCount = convertedData.length;
-
-      if (currentCount > 0 && currentCount < targetCount) {
-        const msg = formatText(UI_TEXT.MODAL.CONFIRM_PAD_CAPACITY, { 
-          name: newSpec.name, 
-          target: targetCount, 
-          current: currentCount 
-        });
-        const ok = await confirmDialog(msg);
-
-        if (ok) {
-          log.info(`${newSpec.name}データパディングを実行`, { current: currentCount, target: targetCount });
-          /* デフォルト桁数モードを取得してパディング */
-          const defaultDigitMode = newSpec.digitModes ? Object.keys(newSpec.digitModes)[0] : APP_CONFIG.DEFAULT_DIGIT_MODE;
-          convertedData = padDataToCapacity(convertedData, targetCount, newSpec, defaultDigitMode);
-        } else {
-          /* キャンセルされたら元の選択に戻す */
-          outputSelect.value = state.outputSpec?.id || state.inputSpec.id;
-          return;
-        }
-      }
-    }
-
-    /* --- 3. 新しい機種を「入力機種 兼 出力機種」として画面再構築 --- */
-    state.inputSpec = newSpec;
+    /* --- 1. 出力機種（state.outputSpec）のみを更新 --- */
     state.outputSpec = newSpec;
-    
-    inputSelect.value = newSpec.id;
-    updateDigitModeSelect(newSpec);
 
-    log.info('出力機種を変更（画面を再構築）', { specId: newSpec.id });
-    
-    state.tableEditor.setSpec(newSpec);
-    state.tableEditor.setMappingSpec(newSpec); /* 同じ機種をセットすることで2段ヘッダーを消す */
-    state.tableEditor.setData(convertedData);
+    /* --- 2. テーブルにマッピング対象のスペックを設定（2段ヘッダー等の表示更新） --- */
+    state.tableEditor.setMappingSpec(newSpec);
 
-    /* 外字サービスを再初期化 */
-    gaijiService.init(newSpec.id);
-    state.gaijiChars = gaijiService.getGaijiChars();
-
-    updateToolbarState(state.toolbarButtons, convertedData.length > 0);
+    /* --- 3. バリデーションとステータス表示を更新 --- */
     runValidation();
     updateStatusBar();
   });

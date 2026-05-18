@@ -8,7 +8,7 @@ export const APP_CONFIG = {
   APP_NAME: 'NTT電話帳エディタ',
 
   /** デフォルト機種ID */
-  DEFAULT_SPEC_ID: 'zx2sm',
+  DEFAULT_SPEC_ID: 'zxsmh',
 
   /** デフォルト桁数モード */
   DEFAULT_DIGIT_MODE: '3digit',
