@@ -134,19 +134,24 @@ export async function processAllFurigana(data, spec) {
     // 最終的に半角カナ変換 + 余計な漢字の除去
     const generated = toHalfWidthKana(processed).replace(/[^\uFF65-\uFF9F0-9A-Z]/gi, '').substring(0, 24);
     const current = row[kanaKey] || '';
+    const isSame = (generated === current);
 
     if (!generated) {
       log.warn(`行 ${index} (${name}): フリガナが生成できませんでした（ソース: ${source}, 変換前: "${processed}"）。漢字が残っているか、無効な文字のみの可能性があります。`);
-    } else if (generated === current) {
-      log.info(`行 ${index} (${name}): 生成されたフリガナ "${generated}" が現在のフリガナ "${current}" と同一のため、レビュー画面から除外（省略）します。`);
     } else {
-      log.info(`行 ${index} (${name}): 新しいフリガナ "${generated}" を検出（ソース: ${source}, 現在値: "${current}"）`);
+      if (isSame) {
+        log.info(`行 ${index} (${name}): 生成されたフリガナ "${generated}" は現在のフリガナと同一です（レビュー画面で選択可能にします）。`);
+      } else {
+        log.info(`行 ${index} (${name}): 新しいフリガナ "${generated}" を検出（ソース: ${source}, 現在値: "${current}"）`);
+      }
       result.push({
           index,
           fieldKey: kanaKey,
           current,
           generated,
           name,
+          isSame,
+          memoryNo: row.memoryNo || '',
       });
     }
   });
