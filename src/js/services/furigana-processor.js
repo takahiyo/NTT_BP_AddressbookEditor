@@ -20,7 +20,7 @@ async function fetchFuriganaFromAPI(names) {
   try {
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain' }, // application/json ではなく text/plain にして Preflight をバイパス
       body: JSON.stringify({ names })
     });
     
