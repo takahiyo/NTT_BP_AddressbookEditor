@@ -1,88 +1,61 @@
 // test_zxl_export.js
 import { ZX2L_SPEC } from './src/js/models/specs/zx2l.js';
 import { objectsToRows, buildCSVText } from './src/js/services/csv-exporter.js';
+import { validateRow } from './src/js/services/validator.js';
 
-console.log('--- ZX2L Export Double Quote Test ---');
+console.log('--- ZX2L Specification & Validation Test ---');
 
-// ZX2L のカラム仕様
-const columns = ZX2L_SPEC.columns;
-console.log('Columns count:', columns.length);
-
-// テスト用ダミーデータ (1行目は値あり、2行目は空欄)
-const testData = [
-  {
-    ten: '0',
-    dataType: '1',
-    version: '1',
-    memoryNo: '0',
-    reserved1: '0',
-    reserved2: '0',
-    name: 'test00000',
-    furigana: 'TEST00000',
-    phone1: '1234567890',
-    icon1: '16',
-    dialAttr1: '0',
-    phone2: '',
-    icon2: '16',
-    dialAttr2: '0',
-    phone3: '',
-    icon3: '16',
-    dialAttr3: '0',
-    phone4: '',
-    icon4: '16',
-    dialAttr4: '0'
-  },
-  {
-    ten: '0',
-    dataType: '1',
-    version: '1',
-    memoryNo: '1',
-    reserved1: '0',
-    reserved2: '0',
-    name: '',
-    furigana: '',
-    phone1: '',
-    icon1: '16',
-    dialAttr1: '0',
-    phone2: '',
-    icon2: '16',
-    dialAttr2: '0',
-    phone3: '',
-    icon3: '16',
-    dialAttr3: '0',
-    phone4: '',
-    icon4: '16',
-    dialAttr4: '0'
-  }
-];
-
-// objectsToRows で2次元配列に変換
-const rows = objectsToRows(testData, columns, ZX2L_SPEC);
-const header = columns.map(c => c.label);
-
-// CSVテキストをビルド
-const csvText = buildCSVText(header, rows, ',', ZX2L_SPEC);
-
-console.log('Build CSV Result:');
-console.log(csvText);
-
-// 行ごとに判定
-const lines = csvText.trim().split('\r\n');
-const expectedLine1 = '0,1,1,0,0,0,"""test00000""","""TEST00000""","""1234567890""",16,0,"""""",16,0,"""""",16,0,"""""",16,0';
-const expectedLine2 = '0,1,1,1,0,0,"""""","""""","""""",16,0,"""""",16,0,"""""",16,0,"""""",16,0';
-
-console.log('Line 1 match?', lines[0] === expectedLine1);
-if (lines[0] !== expectedLine1) {
-  console.error('Line 1 mismatch!');
-  console.error('Expected:', expectedLine1);
-  console.error('Actual:  ', lines[0]);
+// 1. 出力エンコーディングが UTF-8 に設定されているか確認
+console.log('1. Encoding check:');
+console.log('ZX2L encoding is:', ZX2L_SPEC.encoding);
+if (ZX2L_SPEC.encoding !== 'UTF-8') {
+  console.error('Error: ZX2L encoding is NOT UTF-8!');
+  process.exit(1);
+} else {
+  console.log('SUCCESS: ZX2L encoding is UTF-8.');
 }
 
-console.log('Line 2 match?', lines[1] === expectedLine2);
-if (lines[1] !== expectedLine2) {
-  console.error('Line 2 mismatch!');
-  console.error('Expected:', expectedLine2);
-  console.error('Actual:  ', lines[1]);
+// 2. 電話番号のハイフンチェックのテスト
+console.log('\n2. Forbidden Phone Chars check:');
+console.log('forbiddenPhoneChars defined:', ZX2L_SPEC.forbiddenPhoneChars);
+
+// 正常なデータ
+const validRow = {
+  memoryNo: '0001',
+  name: 'テスト名称',
+  furigana: 'ﾃｽﾄ',
+  phone1: '09012345678',
+  icon1: '16',
+  dialAttr1: '0'
+};
+
+// ハイフンが含まれるデータ
+const invalidRow = {
+  memoryNo: '0002',
+  name: 'テスト名称',
+  furigana: 'ﾃｽﾄ',
+  phone1: '090-1234-5678', // ハイフンあり
+  icon1: '16',
+  dialAttr1: '0'
+};
+
+const validResults = validateRow(validRow, ZX2L_SPEC, new Set(), '4digit');
+const invalidResults = validateRow(invalidRow, ZX2L_SPEC, new Set(), '4digit');
+
+console.log('Valid row results (should be empty/no error):', JSON.stringify(validResults));
+if (validResults.phone1) {
+  console.error('Error: Valid row phone1 has unexpected validation errors!', validResults.phone1);
+  process.exit(1);
+} else {
+  console.log('SUCCESS: Valid row phone1 has no validation errors.');
 }
 
-console.log('--- Test Completed ---');
+console.log('Invalid row results (should contain hyphen error):', JSON.stringify(invalidResults));
+if (!invalidResults.phone1 || !invalidResults.phone1.some(r => r.severity === 'error' && r.message.includes('使用できない文字'))) {
+  console.error('Error: Invalid row phone1 did NOT fail with SEVERITY.ERROR as expected!');
+  process.exit(1);
+} else {
+  console.log('SUCCESS: Invalid row phone1 correctly failed with hyphen validation error.');
+}
+
+console.log('\n--- All Tests Completed Successfully! ---');

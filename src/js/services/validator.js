@@ -132,6 +132,9 @@ export function validateRow(rowData, spec, gaijiChars = new Set(), selectedDigit
     const value = rowData[col.key] || '';
     const constraint = spec.fieldConstraints?.[col.key];
     const fieldResults = [];
+    
+    const fieldDef = spec.fields?.find(f => f.key === col.key);
+    const colType = fieldDef?.type || col.type;
 
     /* バイト数チェック */
     const byteResult = validateByteLength(value, constraint);
@@ -144,9 +147,25 @@ export function validateRow(rowData, spec, gaijiChars = new Set(), selectedDigit
     }
 
     /* 電話番号文字種チェック */
-    if (col.type === 'phone' && value) {
+    if (colType === 'phone' && value) {
       const phoneResult = validatePhoneChars(value);
       if (phoneResult) fieldResults.push(phoneResult);
+      
+      /* 機種固有の電話番号禁止文字チェック */
+      if (spec.forbiddenPhoneChars && spec.forbiddenPhoneChars.length > 0) {
+        const forbiddenFound = [];
+        for (const char of value) {
+          if (spec.forbiddenPhoneChars.includes(char)) {
+            forbiddenFound.push(char);
+          }
+        }
+        if (forbiddenFound.length > 0) {
+          fieldResults.push(createResult(SEVERITY.ERROR,
+            `電話番号に使用できない文字が含まれています: ${[...new Set(forbiddenFound)].join(', ')}`,
+            { forbiddenPhoneChars: forbiddenFound }
+          ));
+        }
+      }
     }
 
     /* 外字チェック */
