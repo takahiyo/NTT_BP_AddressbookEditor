@@ -768,31 +768,36 @@ async function handleFurigana() {
   log.info('フリガナ生成を開始', { rows: data.length });
   showToast(UI_TEXT.TOOLBAR.GENERATE_FURIGANA + '中...', 'info');
 
-  const results = await processAllFurigana(data, state.inputSpec);
-  if (results.length === 0) {
-    showToast('生成可能なフリガナはありません', 'info');
-    return;
+  try {
+    const results = await processAllFurigana(data, state.inputSpec);
+    if (results.length === 0) {
+      showToast('生成可能なフリガナはありません', 'info');
+      return;
+    }
+
+    log.info('フリガナ生成完了、レビューモーダルを表示', { candidates: results.length });
+    const selectedResults = await showFuriganaReviewModal(results);
+    if (!selectedResults || selectedResults.length === 0) {
+      log.info('フリガナ反映をキャンセル');
+      return;
+    }
+
+    const newData = [...data];
+    selectedResults.forEach(item => {
+      newData[item.index] = {
+        ...newData[item.index],
+        [item.fieldKey]: item.generated
+      };
+    });
+
+    state.tableEditor.updateData(newData);
+    runValidation();
+    log.info('フリガナ反映完了', { applied: selectedResults.length });
+    showToast(formatText(UI_TEXT.TOAST.CONVERT_COMPLETE, { count: selectedResults.length }), 'success');
+  } catch (err) {
+    log.error('フリガナ生成処理中にエラーが発生しました', { error: err.message, stack: err.stack });
+    showToast(`フリガナ生成失敗: ${err.message}`, 'error');
   }
-
-  log.info('フリガナ生成完了、レビューモーダルを表示', { candidates: results.length });
-  const selectedResults = await showFuriganaReviewModal(results);
-  if (!selectedResults || selectedResults.length === 0) {
-    log.info('フリガナ反映をキャンセル');
-    return;
-  }
-
-  const newData = [...data];
-  selectedResults.forEach(item => {
-    newData[item.index] = {
-      ...newData[item.index],
-      [item.fieldKey]: item.generated
-    };
-  });
-
-  state.tableEditor.updateData(newData);
-  runValidation();
-  log.info('フリガナ反映完了', { applied: selectedResults.length });
-  showToast(formatText(UI_TEXT.TOAST.CONVERT_COMPLETE, { count: selectedResults.length }), 'success');
 }
 
 /** フリガナ：辞書機能（マスター）の有効/無効切り替え */
