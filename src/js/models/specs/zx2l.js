@@ -30,7 +30,7 @@ export const ZX2L_SPEC = defineSpec({
   id: 'zx2l',
   name: 'ZX2L',
   family: 'typeL',
-  encoding: 'Shift_JIS',
+  encoding: 'UTF-8',
   inputEncodings: ['Shift_JIS', 'UTF-8'],
   phoneNumberSlots: PHONE_SLOTS,
   expectedColumns: 20,    // メタデータ6 + 名称/フリガナ2 + (電話/アイコン/属性)*4 = 20
@@ -45,6 +45,9 @@ export const ZX2L_SPEC = defineSpec({
   
   /* ZX-L仕様: forceQuoteColumns カラムは二重にクォーテーションをエスケープして出力する */
   doubleQuoteForForceQuote: true,
+
+  /* 電話番号固有の禁止文字: ハイフンを禁止 */
+  forbiddenPhoneChars: ['-'],
 
   /* TEN番号の範囲 (0-576) */
   tenRange: { min: 0, max: 576 },
