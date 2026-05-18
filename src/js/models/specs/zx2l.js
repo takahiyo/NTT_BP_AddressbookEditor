@@ -42,6 +42,9 @@ export const ZX2L_SPEC = defineSpec({
     'name', 'furigana', 
     'phone1', 'phone2', 'phone3', 'phone4'
   ],
+  
+  /* ZX-L仕様: forceQuoteColumns カラムは二重にクォーテーションをエスケープして出力する */
+  doubleQuoteForForceQuote: true,
 
   /* TEN番号の範囲 (0-576) */
   tenRange: { min: 0, max: 576 },

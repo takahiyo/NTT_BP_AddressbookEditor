@@ -28,6 +28,11 @@ export function buildCSVText(header, rows, delimiter = ',', spec = {}) {
     
     const forceQuote = colKey && spec.forceQuoteColumns?.includes(colKey);
     
+    if (forceQuote && spec.doubleQuoteForForceQuote) {
+      /* 一度ダブルクォーテーションで囲んでからCSVエスケープする（二重クォート構造） */
+      str = '"' + str + '"';
+    }
+    
     if (forceQuote || str.includes(delimiter) || str.includes('"') || str.includes('\n') || str.includes('\r')) {
       return '"' + str.replace(/"/g, '""') + '"';
     }
