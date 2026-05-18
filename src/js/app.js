@@ -19,7 +19,7 @@ import { TableEditor } from './ui/table-editor.js';
 import { initToolbar, updateToolbarState } from './ui/toolbar.js';
 import { showToast, formatText } from './ui/toast.js';
 import { confirmDialog, showCityCodeModal, showFuriganaReviewModal } from './ui/modal.js';
-import { autoAssignMemoryNos, padDataToCapacity } from './services/memory-service.js';
+import { autoAssignMemoryNos, padDataToCapacity, fillMemoryGaps } from './services/memory-service.js';
 import { processAllPhoneNumbers } from './services/phone-processor.js';
 import { processAllFurigana } from './services/furigana-processor.js';
 import { furiganaMappingService } from './services/furigana-mapping-service.js';
@@ -337,6 +337,9 @@ async function loadFile(file) {
     /* カラム定義に基づいてデータをマッピング（Google形式等の動的カラムを優先） */
     const columns = dynamicColumns || activeSpec.columns;
     let data = mapRowsToObjects(rows, columns);
+
+    /* メモリ番号の欠番部分に空行を挟み込む */
+    data = fillMemoryGaps(data, activeSpec, state.digitMode);
 
     /* --- [SPECIAL] Google連絡先などのインポート時は内部モデル形式に変換 --- */
     if (activeSpec.id === 'google') {
