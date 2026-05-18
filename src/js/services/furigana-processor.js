@@ -107,29 +107,40 @@ export async function processAllFurigana(data, spec) {
   // 3. 各行に適用
   data.forEach((row, index) => {
     const name = row[nameKey] || '';
-    if (!name) return;
+    if (!name) {
+      log.debug(`行 ${index}: 名前が空のためスキップ`);
+      return;
+    }
 
     let processed = '';
+    let source = '';
     
     // 1. 個別マッピング（辞書）に登録されているかチェック
     const mapped = furiganaMappingService.getMatchedFurigana(name);
     
     if (mapped) {
       processed = mapped;
-      log.debug('Custom mapping applied', { name, processed });
+      source = '辞書マッピング';
     } else if (apiReadings[name]) {
       // 2. API の結果があれば置換
       processed = apiReadings[name];
+      source = 'Worker API';
     } else {
       // 3. 登録がない場合はローカル変換を試みる
       processed = generateLocalFurigana(name);
+      source = 'ローカルフォールバック';
     }
 
     // 最終的に半角カナ変換 + 余計な漢字の除去
     const generated = toHalfWidthKana(processed).replace(/[^\uFF65-\uFF9F0-9A-Z]/gi, '').substring(0, 24);
     const current = row[kanaKey] || '';
 
-    if (generated && generated !== current) {
+    if (!generated) {
+      log.warn(`行 ${index} (${name}): フリガナが生成できませんでした（ソース: ${source}, 変換前: "${processed}"）。漢字が残っているか、無効な文字のみの可能性があります。`);
+    } else if (generated === current) {
+      log.info(`行 ${index} (${name}): 生成されたフリガナ "${generated}" が現在のフリガナ "${current}" と同一のため、レビュー画面から除外（省略）します。`);
+    } else {
+      log.info(`行 ${index} (${name}): 新しいフリガナ "${generated}" を検出（ソース: ${source}, 現在値: "${current}"）`);
       result.push({
           index,
           fieldKey: kanaKey,
