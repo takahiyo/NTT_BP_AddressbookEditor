@@ -36,6 +36,7 @@ export const A1_SPEC = defineSpec({
   requirePhoneNumber: true,
   forbiddenChars: ['&', '<', '>', '"', "'", ','],
   forceQuoteColumns: ['name', 'furigana', 'phone1', 'phone2', 'dialInContent'], // 出力時に"で囲む列
+  autoMemoryNoOnExport: true,
   
   /* TEN番号の範囲 (0-1152) */
   tenRange: { min: 0, max: 1152 },

@@ -4,10 +4,9 @@
  * 新機種追加時はimport＋register()の1箇所で済む
  */
 
-import { ZX2SM_SPEC } from './specs/zx2sm.js';
+import { ZXSMH_SPEC } from './specs/zxsmh.js';
 import { A1_SPEC } from './specs/a1.js';
 import { ZX2L_SPEC } from './specs/zx2l.js';
-import { ZXH_SPEC } from './specs/zxh.js';
 import { GOOGLE_SPEC } from './specs/google.js';
 
 /** 登録済み機種仕様のMap */
@@ -26,10 +25,9 @@ function register(spec) {
 }
 
 /* === 初期登録 === */
-register(ZX2SM_SPEC);
+register(ZXSMH_SPEC);
 register(A1_SPEC);
 register(ZX2L_SPEC);
-register(ZXH_SPEC);
 register(GOOGLE_SPEC);
 /* 新機種追加例:
  * import { TYPEL_SPEC } from './specs/typel.js';
