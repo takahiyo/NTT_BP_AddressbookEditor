@@ -26,8 +26,8 @@ function register(spec) {
 
 /* === 初期登録 === */
 register(ZXSMH_SPEC);
-register(A1_SPEC);
-register(ZX2L_SPEC);
+register(ZX2L_SPEC); // A1とLの表示順を入れ替え (Lを先に登録)
+register(A1_SPEC);   // A1を後に登録
 register(GOOGLE_SPEC);
 /* 新機種追加例:
  * import { TYPEL_SPEC } from './specs/typel.js';

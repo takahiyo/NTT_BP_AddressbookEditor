@@ -15,7 +15,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-lg); /* 上下余白を md (16px) から sm (8px) へ削減 */
   background: var(--color-bg-elevated);
   backdrop-filter: blur(12px);
   border-bottom: var(--border-width) solid var(--color-glass-border);
@@ -26,8 +26,9 @@
 
 .app-header__title {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row; /* 横並びに変更 */
+  align-items: baseline; /* ベースラインで位置合わせ */
+  gap: var(--spacing-sm); /* タイトルとサブタイトルの間隔 */
 }
 
 .app-header__title h1 {
@@ -43,7 +44,8 @@
 .app-header__title .subtitle {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
-  margin-left: var(--spacing-sm);
+  margin-left: 0; /* gapで制御するため0に設定 */
+  white-space: nowrap;
 }
 
 /* ヘッダー内の機種選択エリア */
