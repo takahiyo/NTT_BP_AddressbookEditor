@@ -195,6 +195,9 @@ export class TableEditor {
     const col = this._columns.find(c => c.key === key);
     const isNumber = col?.type === 'number';
 
+    /* 行の位置が変わっても選択と検証結果を同じ連絡先へ追従させる。 */
+    const selectedRows = new Set([...this._selectedRows].map(i => this._data[i]));
+    const validationByRow = new Map(this._data.map((row, i) => [row, this._validationResults[i]]));
     this._data.sort((a, b) => {
       let valA = a[key] || '';
       let valB = b[key] || '';
@@ -212,6 +215,9 @@ export class TableEditor {
       return 0;
     });
 
+    this._selectedRows = new Set(this._data.flatMap((row, i) => selectedRows.has(row) ? [i] : []));
+    this._validationResults = this._data.map(row => validationByRow.get(row));
+    this._reindex();
     this._currentPage = 1;
     this._render();
   }

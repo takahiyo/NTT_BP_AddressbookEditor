@@ -53,6 +53,8 @@ export const ZXSMH_SPEC = defineSpec({
       8: 'アイコン8'
     }
   },
+  /* 発信属性を意味で対応付ける。別機種で同じ数値でも意味が異なる。 */
+  dialAttrSemantics: { external: '1', pbx: '2' },
   dialAttrRange: {
     min: 1,
     max: 2,
