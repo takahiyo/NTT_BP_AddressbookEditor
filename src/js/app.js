@@ -419,12 +419,13 @@ async function handleExport() {
   log.info('CSV書出開始', { rows: data.length });
 
   /* 出力機種のカラム構成でCSVを生成 */
-  let exportData = data;
+  /* 書出用コピーを使い、補完・採番・機種変換で編集中の入力データを変更しない。 */
+  let exportData = data.map(row => ({ ...row }));
   let exportSpec = state.outputSpec;
 
   /* 入力機種と出力機種が異なる場合は変換 */
   if (state.inputSpec.id !== state.outputSpec.id) {
-    const result = convertBetweenModels(data, state.inputSpec, state.outputSpec);
+    const result = convertBetweenModels(exportData, state.inputSpec, state.outputSpec);
     exportData = result.data;
     result.warnings.forEach(w => showToast(w, 'info'));
   }
@@ -443,8 +444,7 @@ async function handleExport() {
         log.info(`${exportSpec.name}エクスポート前にパディングを実行`, { target: targetCount });
         const defaultDigitMode = exportSpec.digitModes ? Object.keys(exportSpec.digitModes)[0] : APP_CONFIG.DEFAULT_DIGIT_MODE;
         exportData = padDataToCapacity(exportData, targetCount, exportSpec, defaultDigitMode);
-        /* アプリの状態も更新しておく（次回のために） */
-        state.tableEditor.setData(exportData);
+        /* 補完した行は今回の出力だけに使用し、入力機種と編集データの対応を維持する。 */
       } else {
         log.info('パディングがキャンセルされたためエクスポートを中止');
         return;

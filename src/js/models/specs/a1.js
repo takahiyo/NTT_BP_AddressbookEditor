@@ -56,6 +56,8 @@ export const A1_SPEC = defineSpec({
       9: '内線アイコン'
     }
   },
+  /* 発信属性を意味で対応付ける。別機種で同じ数値でも意味が異なる。 */
+  dialAttrSemantics: { none: '0', dial: '1', notify: '2' },
   dialAttrRange: { 
     min: 0, 
     max: 2, 

@@ -79,6 +79,8 @@ export const ZX2L_SPEC = defineSpec({
     },
     default: 16
   },
+  /* 発信属性を意味で対応付ける。別機種で同じ数値でも意味が異なる。 */
+  dialAttrSemantics: { external: '0', pbx: '1', internal: '2' },
   dialAttrRange: { 
     min: 0, 
     max: 2,

@@ -1,8 +1,8 @@
 
 import { convertBetweenModels } from './src/js/services/model-converter.js';
 import { A1_SPEC } from './src/js/models/specs/a1.js';
-import { ZXL_SPEC } from './src/js/models/specs/zxl.js';
-import { ZX2SM_SPEC } from './src/js/models/specs/zx2sm.js';
+import { ZX2L_SPEC as ZXL_SPEC } from './src/js/models/specs/zx2l.js';
+import { ZXSMH_SPEC as ZX2SM_SPEC } from './src/js/models/specs/zxsmh.js';
 
 function testIconMapping() {
   console.log('--- Testing A1 to ZX-L Icon Mapping ---');
@@ -25,6 +25,7 @@ function testIconMapping() {
     result.data[0].icon1 === '16' && result.data[0].icon2 === '17' &&
     result.data[1].icon1 === '23' && result.data[1].icon2 === '16';
   
+  if (!success) throw new Error('A1 icon mapping failed');
   console.log(success ? '✅ Success: Mapping correct' : '❌ Failure: Mapping incorrect');
 
   console.log('\n--- Testing ZX2SM to ZX-L Icon Mapping ---');
@@ -36,7 +37,7 @@ function testIconMapping() {
   if (resultZX.data[0].icon1 === '52') {
     console.log('✅ Success: ZX2SM 8 mapped to 52');
   } else {
-    console.log('❌ Failure');
+    throw new Error('ZXSMH icon mapping failed');
   }
 }
 

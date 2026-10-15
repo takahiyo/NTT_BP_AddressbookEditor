@@ -40,7 +40,9 @@ export function convertBetweenModels(data, sourceSpec, targetSpec) {
   }
 
   /* 変換処理 */
-  const convertedData = data.map(row => {
+  const convertedData = data.map(sourceRow => {
+    /* Googleの事前処理も変換元の編集中データを変更しない。 */
+    const row = { ...sourceRow };
     const newRow = { _rowIndex: row._rowIndex };
 
     /* --- [SPECIAL] Google連絡先からの入力時の事前処理 --- */
@@ -102,14 +104,15 @@ export function convertBetweenModels(data, sourceSpec, targetSpec) {
           row[vKey] = numInfo.value;
           row[iKey] = iconCode;
           row[tKey] = numInfo.type; // 元のタイプ文字列を維持（表示用）
-          row[dKey] = '1';
+          /* Googleには発信属性がないため、出力先の既定値を使用する。 */
+          row[dKey] = targetSpec.fields?.find(f => f.key === dKey)?.defaultValue || '';
         } else {
           // 番号がないスロットはクリア
           row[pKey] = '';
           row[vKey] = '';
           row[iKey] = '1';
           row[tKey] = '';
-          row[dKey] = '1';
+          row[dKey] = targetSpec.fields?.find(f => f.key === dKey)?.defaultValue || '';
         }
       }
     }
@@ -198,6 +201,19 @@ export function convertBetweenModels(data, sourceSpec, targetSpec) {
           }
         }
         
+        /* 数字の一致ではなく意味で発信属性を変換する。対応不能な意味は既定値と警告を返す。 */
+        if (col.key.startsWith('dialAttr') && sourceSpec.id !== targetSpec.id && sourceSpec.dialAttrSemantics && targetSpec.dialAttrSemantics) {
+          const semantic = Object.keys(sourceSpec.dialAttrSemantics)
+            .find(key => sourceSpec.dialAttrSemantics[key] === String(sourceVal));
+          const mapped = targetSpec.dialAttrSemantics[semantic];
+          if (mapped !== undefined) {
+            finalVal = mapped;
+          } else {
+            finalVal = defaultValue || String(targetSpec.dialAttrRange?.min ?? '');
+            const warning = `発信属性「${sourceSpec.dialAttrRange?.labels?.[sourceVal] || sourceVal}」は${targetSpec.name}に対応しないため、既定値「${finalVal}」に変更されます`;
+            if (!warnings.includes(warning)) warnings.push(warning);
+          }
+        }
         newRow[col.key] = finalVal;
       } else if (defaultValue !== undefined && defaultValue !== '') {
         /* マッピング元が空（または存在しない）かつ、変換先にデフォルト値があれば採用 */

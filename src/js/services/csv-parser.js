@@ -5,7 +5,7 @@
  */
 
 import { detectEncoding, detectBOM, decodeBytes } from '../utils/encoding.js';
-import { getAllSpecs } from '../models/spec-registry.js';
+import { getAllSpecs, getSpec } from '../models/spec-registry.js';
 import { UI_TEXT } from '../constants/ui-text.js';
 
 /**
@@ -177,6 +177,8 @@ export async function parseCSVFile(file, spec, delimiter = ',') {
 
   /* 機種自動判別 */
   const detectedSpecId = detectSpecFromCSV(bytes);
+  /* 判別できた機種の仕様で列数とヘッダーを解釈し、選択中機種との不一致で拒否しない。 */
+  spec = getSpec(detectedSpecId) || spec;
 
   /* 
    * [ENHANCED VALIDATION]
